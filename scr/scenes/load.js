@@ -1,9 +1,10 @@
 class Load extends Phaser.Scene {
-    constructor () {
+    constructor() {
         super("loadScene");
     }
-    preload () {
-
+    preload() {
+        this.load.path = "./assets/";
+        this.load.image("turnip", "turnip.png");
     }
     create() {
         console.log("created loadScene!");

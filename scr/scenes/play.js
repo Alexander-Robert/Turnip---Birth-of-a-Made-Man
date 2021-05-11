@@ -4,5 +4,6 @@ class Play extends Phaser.Scene {
     }
     create() {
         console.log("created playScene!");
+        this.turnip = this.add.sprite(game.config.width/2, game.config.height/2, "turnip");
     }
 }
