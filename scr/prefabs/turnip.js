@@ -45,7 +45,7 @@ class IdleState extends TurnipState {
 
     enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
-        if(turnip.isTinted) turnip.clearTint();
+        //if(turnip.isTinted) turnip.clearTint();
         //play the stop (reset turnip to be a static idle image instead of an animation) 
         //turnip.anims.play(`walk-${turnip.direction}`);
         //turnip.anims.stop(); 
@@ -71,7 +71,7 @@ class MoveState extends TurnipState {
     constructor(scene) {super(scene);} //pass the scene into TurnipState to define the keys, methods, etc.
 
     enter(scene, turnip){
-        turnip.tint = "#00FF00";
+        //turnip.tint = "#00FF00";
     }
     execute(scene, turnip) {
         //check for transitions
