@@ -43,7 +43,7 @@ class TurnipState extends State {
 class IdleState extends TurnipState {
     constructor(scene) {super(scene);} //pass the scene into TurnipState to define the keys, methods, etc.
 
-    enter(scene, turnip) {
+    enter(scene, turnip) { 
         turnip.body.setVelocity(0); //stop turnip
         //if(turnip.isTinted) turnip.clearTint();
         //play the stop (reset turnip to be a static idle image instead of an animation) 
