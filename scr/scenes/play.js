@@ -25,7 +25,8 @@ class Play extends Phaser.Scene {
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
 
         //create our player character
-        this.turnip = new Turnip(this, game.config.width / 2, game.config.height / 2, "turnip", 0, 'down');
+        this.turnip = new Turnip(this, 100, 
+            100, "turnip", 0, 'down').setScale(0.25);
 
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
@@ -42,19 +43,32 @@ class Play extends Phaser.Scene {
         this.backgroundLayer.setCollision([2, 4, 5]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
 
+        //add UI images
+        this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
+        this.shop.setScrollFactor(0);
+        this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
+        this.tower.setScrollFactor(0);
+        this.pescotti = this.add.sprite(this.shop.x, this.shop.y, "pescotti").setOrigin(0);
+        this.pescotti.setScrollFactor(0);
         //camera definitions
         //lock camera to map size bounds
-        this.cameras.main.setBounds(0,0,1280, 1000); //TODO: find out how to get the tilemap width and height
+        this.cameras.main.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
         this.cameras.main.setDeadzone(0,100);
+        
+        //add minimap camera
+        //TODO: fix it so minimap moves just like the main camera
+        //TODO: create variables/consts to replace hard codes values with
+        this.minimap = this.cameras.add(1280, 0, 1280, 736 / 4).setZoom(0.25);
+        this.minimap.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
+        //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
+        this.minimap.startFollow(this.turnip, true, 1, 0.5);
+        this.minimap.setDeadzone(0, 250); 
 
-
-        this.minimap = this.cameras.add((game.config.width/2) - (1280 * 0.125), 
-        -(game.config.height/2) - 15, 1280, 1000).setZoom(0.25);
-
-        //when shop UI is added, //this.shop.setScrollFactor(0); //keeps on screen at all times
-        //other UI would be the tower of mob titles
+        this.minimap.ignore(this.shop);
+        this.minimap.ignore(this.tower);
+        this.minimap.ignore(this.pescotti);        
     }
 
     update() {

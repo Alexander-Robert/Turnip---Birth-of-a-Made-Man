@@ -10,8 +10,9 @@ Date completed:
 //define main game object
 let config = {
     type: Phaser.AUTO,
-    width: 1280,
-    height: 720,
+    pixelArt: true,
+    width: 1600,
+    height: 870,
     physics: {
         default: 'arcade',
         arcade: {
