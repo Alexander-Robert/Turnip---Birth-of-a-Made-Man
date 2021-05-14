@@ -15,6 +15,16 @@ class Play extends Phaser.Scene {
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        //create background tilemap
+        const field = this.add.tilemap("field_test");
+
+        //add tileset to map
+        const field_tileset = field.addTilesetImage("field_set", "field_set");
+
+        //create tilemap layers
+        this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
+
+        
         //create our player character
         this.turnip = new Turnip(this, game.config.width / 2, game.config.height / 2, "turnip", 0, 'down');
 
@@ -28,6 +38,10 @@ class Play extends Phaser.Scene {
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
+
+        //set collisions
+        this.backgroundLayer.setCollision([2, 4, 5]);
+        this.physics.add.collider(this.turnip, this.backgroundLayer);
     }
 
     update() {
