@@ -24,7 +24,6 @@ class Play extends Phaser.Scene {
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
 
-        
         //create our player character
         this.turnip = new Turnip(this, game.config.width / 2, game.config.height / 2, "turnip", 0, 'down');
 
@@ -42,6 +41,20 @@ class Play extends Phaser.Scene {
         //set collisions
         this.backgroundLayer.setCollision([2, 4, 5]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
+
+        //camera definitions
+        //lock camera to map size bounds
+        this.cameras.main.setBounds(0,0,1280, 1000); //TODO: find out how to get the tilemap width and height
+        //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
+        this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
+        this.cameras.main.setDeadzone(0,100);
+
+
+        this.minimap = this.cameras.add((game.config.width/2) - (1280 * 0.125), 
+        -(game.config.height/2) - 15, 1280, 1000).setZoom(0.25);
+
+        //when shop UI is added, //this.shop.setScrollFactor(0); //keeps on screen at all times
+        //other UI would be the tower of mob titles
     }
 
     update() {

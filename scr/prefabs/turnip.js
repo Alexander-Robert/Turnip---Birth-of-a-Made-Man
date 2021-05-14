@@ -6,8 +6,8 @@ class Turnip extends Phaser.Physics.Arcade.Sprite {
 
         //create individual properties for Turnip
         this.direction = direction;
-        this.velocity = 100;
-        this.body.setCollideWorldBounds(true);
+        this.velocity = 200;
+        //this.body.setCollideWorldBounds(true);
     }
 }
 //inherits from State; Acts as an abstract class to define properties and methods common among all subclasses
