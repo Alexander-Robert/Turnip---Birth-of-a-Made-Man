@@ -68,12 +68,50 @@ class Play extends Phaser.Scene {
 
         this.minimap.ignore(this.shop);
         this.minimap.ignore(this.tower);
-        this.minimap.ignore(this.pescotti);        
+        this.minimap.ignore(this.pescotti);
+        
+        //temp keys for testing stats //TODO: remove when you've implemented interactions with tiles
+        this.keys.Mkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+        this.keys.Nkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+
+        //define stats
+        this.score = 0;
+        this.crops = 0;
+
+        //text configuration
+        let textConfig = {
+            fontFamily: 'Courier',
+            fontSize: '48px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 0
+        }
+
+        this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
+        this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
     }
 
     update() {
         //process current step within the turnipFSM
         this.turnipFSM.step();
+
+        //TODO: reorganize this logic to work with turnip interacting with specific tiles
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {
+            this.crops++;
+            this.cropsText.text = "c:" + this.crops;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Nkey)) {
+            this.score += this.crops;
+            this.crops = 0;
+            this.cropsText.text = "c:" + this.crops;
+            this.scoreText.text = "s:" + this.score;
+        }
+
     }
 
     //defines all the animations used in play.js
