@@ -20,13 +20,20 @@ class Play extends Phaser.Scene {
 
         //add tileset to map
         const field_tileset = field.addTilesetImage("field_set", "field_set");
+        const object_tileset = field.addTilesetImage("object_set", "object_set");
 
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
+        this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        
 
         //create our player character
         this.turnip = new Turnip(this, 100, 
             100, "turnip", 0, 'down').setScale(0.25);
+
+        //console.log(JSON.stringify(this.field.getTileAt(this.terrainLayer.worldToTileX(this.turnip.body.position.x, true), 
+        //this.terrainLayer.worldToTileY(this.turnip.body.position.y, true), true, this.terrainLayer).properties));
+
 
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
@@ -40,8 +47,10 @@ class Play extends Phaser.Scene {
         this.createAnimations();
 
         //set collisions
-        this.backgroundLayer.setCollision([2, 4, 5]);
+        this.backgroundLayer.setCollision([4, 5]);
+        this.terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
+        this.physics.add.collider(this.turnip, this.terrainLayer);
 
         //add UI images
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
@@ -72,9 +81,22 @@ class Play extends Phaser.Scene {
     }
 
     update() {
+
+        
+        
+
         //process current step within the turnipFSM
         this.turnipFSM.step();
+        
+        this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, tile) => {
+            console.log("destroy");
+            tile.destroy();
+        });
+
     }
+
+    
+  
 
     //defines all the animations used in play.js
     createAnimations() {
