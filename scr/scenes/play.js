@@ -15,6 +15,9 @@ class Play extends Phaser.Scene {
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        //create audios object of different audios
+        this.createAudio();
+        console.log(this.audios);
         //create background tilemap
         const field = this.add.tilemap("field_test");
 
@@ -34,7 +37,7 @@ class Play extends Phaser.Scene {
             move: new MoveState(this),
             steal: new StealState(this),
             burrow: new BurrowState(this),
-        }, [this, this.turnip]);
+        }, [this, this.turnip, this.audios]);
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
@@ -47,7 +50,7 @@ class Play extends Phaser.Scene {
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
         this.shop.setScrollFactor(0);
         this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
-        this.tower.setScrollFactor(0);
+        this.towersd
         this.pescotti = this.add.sprite(this.shop.x, this.shop.y, "pescotti").setOrigin(0);
         this.pescotti.setScrollFactor(0);
         //camera definitions
@@ -94,6 +97,7 @@ class Play extends Phaser.Scene {
 
         this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
         this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
+        //TODO figure out how to have text not scroll
     }
 
     update() {
@@ -112,6 +116,12 @@ class Play extends Phaser.Scene {
             this.scoreText.text = "s:" + this.score;
         }
 
+    }
+
+    //defines all audios into an object to pass to FSM that uses it.
+    createAudio() {
+        this.audios  = {};
+        this.audios.running = this.sound.add('running', { loop: true });
     }
 
     //defines all the animations used in play.js

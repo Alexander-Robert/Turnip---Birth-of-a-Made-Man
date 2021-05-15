@@ -70,8 +70,8 @@ class IdleState extends TurnipState {
 class MoveState extends TurnipState {
     constructor(scene) {super(scene);} //pass the scene into TurnipState to define the keys, methods, etc.
 
-    enter(scene, turnip){
-        //turnip.tint = "#00FF00";
+    enter(scene, turnip, audios){
+        audios.running.play();
     }
     execute(scene, turnip) {
         //check for transitions
@@ -108,6 +108,9 @@ class MoveState extends TurnipState {
 
         // handle animation
         //turnip.anims.play(`walk-${turnip.direction}`, true);
+    }
+    exit(scene, turnip, audios) {
+        audios.running.stop();
     }
 }
 
