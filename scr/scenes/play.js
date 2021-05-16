@@ -76,6 +76,7 @@ class Play extends Phaser.Scene {
         //temp keys for testing stats //TODO: remove when you've implemented interactions with tiles
         this.keys.Mkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
         this.keys.Nkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+        this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 
         //define stats
         this.score = 0;
@@ -115,7 +116,9 @@ class Play extends Phaser.Scene {
             this.cropsText.text = "c:" + this.crops;
             this.scoreText.text = "s:" + this.score;
         }
-
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
+            this.scene.start("menuScene");
+        }
     }
 
     //defines all audios into an object to pass to FSM that uses it.
