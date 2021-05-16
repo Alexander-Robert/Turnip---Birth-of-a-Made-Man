@@ -146,7 +146,8 @@ class BurrowState extends TurnipState {
             //ask farmerFSM if it should cover the hole or not.
             //create a separate sprite in the shop UI that player controls
             //play an entrance animation to the shop UI
-
+        
+        turnip.body.setVelocity(0);
         turnip.alpha = 0;
         this.turnipUI.body.position.x = 800;
         this.turnipUI.alpha = 1;
@@ -164,10 +165,7 @@ class BurrowState extends TurnipState {
             //return; //for after the correct transition is executed.
         }
 
-        
-
         // handle movement
-        //this.turnipUI.body.setVelocity(0);
         if((this.A.isDown) && (this.turnipUI.body.position.x > 215)) { //Left is pressed
                 this.turnipUI.body.setVelocityX(-this.turnipUI.velocity);
                 //TODO: flip sprite image left facing
