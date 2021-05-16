@@ -11,8 +11,8 @@ Date completed:
 let config = {
     type: Phaser.AUTO,
     pixelArt: true,
-    width: 1600,
-    height: 870,
+    width: 1280,
+    height: 736,
     physics: {
         default: 'arcade',
         arcade: {

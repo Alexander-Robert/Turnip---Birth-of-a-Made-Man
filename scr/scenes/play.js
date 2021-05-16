@@ -19,12 +19,12 @@ class Play extends Phaser.Scene {
         const field = this.add.tilemap("field_test");
 
         //add tileset to map
-        const field_tileset = field.addTilesetImage("field_set", "field_set");
-        const object_tileset = field.addTilesetImage("object_set", "object_set");
+        const field_tileset = field.addTilesetImage("field_set", "field_set", 32, 32);
+        const object_tileset = field.addTilesetImage("object_set", "object_set", 32, 32);
 
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
-        this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        const terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
         
 
         //create our player character
@@ -48,9 +48,9 @@ class Play extends Phaser.Scene {
 
         //set collisions
         this.backgroundLayer.setCollision([4, 5]);
-        this.terrainLayer.setCollision([7, 8]);
+        terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
-        this.physics.add.collider(this.turnip, this.terrainLayer);
+        this.physics.add.collider(this.turnip, terrainLayer);
 
         //add UI images
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
@@ -82,15 +82,14 @@ class Play extends Phaser.Scene {
 
     update() {
 
-        
-        
-
         //process current step within the turnipFSM
         this.turnipFSM.step();
         
-        this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, tile) => {
+        this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, crop) => {
+            if (crop.properties.crop == true) {
             console.log("destroy");
-            tile.destroy();
+            crop.destroy();
+            }
         });
 
     }

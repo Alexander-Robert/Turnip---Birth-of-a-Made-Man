@@ -70,11 +70,27 @@
              "0":
                 {
                  "crop":true
+                },
+             "1":
+                {
+                 "crop":true
+                },
+             "2":
+                {
+                 "crop":true
                 }
             },
          "tilepropertytypes":
             {
              "0":
+                {
+                 "crop":"bool"
+                },
+             "1":
+                {
+                 "crop":"bool"
+                },
+             "2":
                 {
                  "crop":"bool"
                 }
