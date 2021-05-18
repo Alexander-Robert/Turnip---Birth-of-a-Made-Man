@@ -43,7 +43,7 @@ class TurnipState extends State {
 class IdleState extends TurnipState {
     constructor(scene) {super(scene);} //pass the scene into TurnipState to define the keys, methods, etc.
 
-    enter(scene, turnip) { 
+    enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
         //if(turnip.isTinted) turnip.clearTint();
         //play the stop (reset turnip to be a static idle image instead of an animation) 
@@ -74,7 +74,7 @@ class MoveState extends TurnipState {
     enter(scene, turnip, audios){
         audios.running.play();
     }
-    execute(scene, turnip) {
+    execute(scene, turnip, audios, transitioning) {
         //check for transitions
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
             this.stateMachine.transition('burrow');
@@ -96,6 +96,7 @@ class MoveState extends TurnipState {
         if(this.W.isDown) { //Up is pressed
             turnip.body.setVelocityY(-turnip.velocity);
             turnip.direction = 'up';
+
         } else if(this.S.isDown) { //Down is pressed
             turnip.body.setVelocityY(turnip.velocity);
             turnip.direction = 'down';
@@ -107,14 +108,12 @@ class MoveState extends TurnipState {
             turnip.body.setVelocityX(turnip.velocity);
             turnip.direction = 'right';
         }
-
         // handle animation
         //turnip.anims.play(`walk-${turnip.direction}`, true);
     }
     exit(scene, turnip, audios) {
         audios.running.stop();
-        //ensures turnip stops moving when exiting the move state
-        turnip.body.setVelocity(0); 
+        turnip.body.setVelocity(0);
     }
 }
 
@@ -140,6 +139,8 @@ class BurrowState extends TurnipState {
     }
 
     enter(scene, turnip, audios) {
+        turnip.body.setVelocity(0);
+        console.log(turnip.body.velocity.x + " " + turnip.body.velocity.y);
         //play burrow animation
         //on animation complete
             //make turnip invisible
@@ -147,18 +148,19 @@ class BurrowState extends TurnipState {
             //create a separate sprite in the shop UI that player controls
             //play an entrance animation to the shop UI
         
-        turnip.body.setVelocity(0);
         turnip.alpha = 0;
         this.turnipUI.body.position.x = 800;
         this.turnipUI.alpha = 1;
 
     }
 
-    execute(scene, turnip, audios) {
+    execute(scene, turnip, audios, transitioning) {
+        if((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
+            turnip.body.setVelocity(0);
         //check for transitions
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
             this.stateMachine.transition('idle');
-            //check type of tile turnip is on. 
+            //check type of tile turnip is on.
                 //If the type is an interactible tile, 
                 //transition to the corresponding state
 

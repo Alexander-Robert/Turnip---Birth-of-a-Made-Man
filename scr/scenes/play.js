@@ -47,7 +47,6 @@ class Play extends Phaser.Scene {
 
         //camera definitions
         //lock camera to map size bounds
-        this.cameras.main.setName("main");
         this.cameras.main.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
@@ -57,7 +56,6 @@ class Play extends Phaser.Scene {
         //TODO: fix it so minimap moves just like the main camera
         //TODO: create variables/consts to replace hard codes values with
         this.minimap = this.cameras.add(1280, 0, 1280, 736 / 4).setZoom(0.25);
-        this.minimap.setName("minimap");
         this.minimap.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.minimap.startFollow(this.turnip, true, 1, 0.5);
@@ -93,6 +91,8 @@ class Play extends Phaser.Scene {
         //TODO: figure out how to have text not scroll
         this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
         this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
+        this.scoreText.setScrollFactor(0);
+        this.cropsText.setScrollFactor(0);
 
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
