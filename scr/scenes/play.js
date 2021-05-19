@@ -119,7 +119,8 @@ class Play extends Phaser.Scene {
         this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);
         this.radishGroup = this.add.group(this.radishes);
         this.physics.add.overlap(this.turnip, this.radishGroup, (obj1, obj2) => {
-            obj2.destroy(); // remove coin on overlap
+            obj2.destroy(); // remove radish crop on overlap
+            this.sound.play('harvest', {volume: 0.5});
         });
     }
 
@@ -127,14 +128,6 @@ class Play extends Phaser.Scene {
 
         //process current step within the turnipFSM
         this.turnipFSM.step();
-        
-        //this.physics.add.overlap(this.turnip, this.cropsLayer, (crop) => {
-        //    if (crop.properties.crop == true) {
-        //        console.log("destroy");
-        //       crop.destroy();
-        //    }
-        //});
-
 
         //TODO: reorganize this logic to work with turnip interacting with specific tiles
         if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {

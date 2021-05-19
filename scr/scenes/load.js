@@ -17,6 +17,7 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_test.json");
 
         this.load.audio("running", "running.wav");
+        this.load.audio("harvest", "rustle.ogg");
     }
     create() {
         console.log("created loadScene!");
