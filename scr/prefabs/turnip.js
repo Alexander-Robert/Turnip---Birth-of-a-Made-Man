@@ -140,7 +140,6 @@ class BurrowState extends TurnipState {
 
     enter(scene, turnip, audios) {
         turnip.body.setVelocity(0);
-        console.log(turnip.body.velocity.x + " " + turnip.body.velocity.y);
         //play burrow animation
         //on animation complete
             //make turnip invisible

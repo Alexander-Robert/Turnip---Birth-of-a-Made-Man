@@ -22,19 +22,21 @@ class Play extends Phaser.Scene {
         const field = this.add.tilemap("field_test");
 
         //add tileset to map
-        const field_tileset = field.addTilesetImage("field_set", "field_set");
-        const object_tileset = field.addTilesetImage("object_set", "object_set");
+        const field_tileset = field.addTilesetImage("field_set", "field_set", 32, 32);
+        const object_tileset = field.addTilesetImage("object_set", "object_set", 32, 32);
 
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
         this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        this.cropsLayer = field.createLayer("crops", object_tileset, 0 ,0);
         
 
         //create our player character
-        this.turnip = new Turnip(this, 100, 100, "turnip", 0, 'down').setScale(0.25);
+        this.turnip = new Turnip(this, 400, 100, "turnip", 0, 'down').setScale(0.25);
 
-        //create out farmer AI
-        this.farmer = new Farmer(this, 500, 500, 'farmer', 0, 'down');
+        //create out farmer AI (defined as a path follower which extends sprites)
+        let emptyPath = this.add.path();
+        this.farmer = new Farmer(this, emptyPath, 500, 500, 'farmer', 0, 'down');
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
@@ -109,25 +111,34 @@ class Play extends Phaser.Scene {
             burrow: new BurrowState(this),
         }, [this, this.turnip, this.audios]);
 
-        // //define the Finite State Machine (FSM) behaviors for the farmer AI
-        // this.farmerFSM = new StateMachine('walk', {
-        //     search: new SearchState(this),
-        //     chase: new ChaseState(this),
-        //     walk: new WalkState(this),
-        //     water: new WaterState(this),
-        //     bury: new BuryState(this),
-        // }, [this, this.farmer, this.audios, this.turnip]);
+        //define the Finite State Machine (FSM) behaviors for the farmer AI
+        this.farmerFSM = new StateMachine('walk', {
+            search: new SearchState(this),
+            chase: new ChaseState(this),
+            walk: new WalkState(this),
+            water: new WaterState(this),
+            bury: new BuryState(this),
+        }, [this, this.farmer, this.audios, this.turnip]);
 
-        // this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, tile) => {
-        //     console.log("destroy");
-        //     tile.destroy();
-        // });
+        //crop collision
+        this.radishes = field.createFromObjects("objects", {
+            name: "radish",
+            key: "object_set",
+            frame: 3
+        });
+
+        this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);
+        this.radishGroup = this.add.group(this.radishes);
+        this.physics.add.overlap(this.turnip, this.radishGroup, (obj1, obj2) => {
+            obj2.destroy(); // remove radish crop on overlap
+            this.sound.play('harvest', {volume: 0.5});
+        });
     }
 
     update() {
         //process current step within the turnipFSM
         this.turnipFSM.step();
-        //this.farmerFSM.step();
+        this.farmerFSM.step();
 
         //TODO: reorganize this logic to work with turnip interacting with specific tiles
         if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {

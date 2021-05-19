@@ -1,6 +1,6 @@
-class Farmer extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, texture, frame, direction) {
-        super(scene, x, y, texture, frame);
+class Farmer extends Phaser.GameObjects.PathFollower {
+    constructor(scene, path, x, y, texture, frame, direction) {
+        super(scene, path, x, y, texture, frame);
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -125,43 +125,48 @@ class WaterState extends FarmerState {
 class WalkState extends FarmerState {
     constructor(scene) {
         super(scene);
-        this.createPaths();
+        this.paths = []; //array of different paths
+        this.createPaths(scene);
     }
 
-    enter(scene, farmer, audios, path, wateredPlant) {
+    enter(scene, farmer, audios, turnip, pathName, wateredPlant) {
         //if(wateredPlant) //if we just watered a plant
-        //continure following the given path
+        //continue following the given path
         //else
         //choose random path (excluding the given path)
         //follow path
+        
         console.log("walk state");
-        this.farmerPath = scene.add.path(100, 100); // start of path
-        this.farmerPath.lineTo(100, 300);         // next path point
-        this.farmerPath.lineTo(150, 500);         // next
-        this.farmerPath.lineTo(200, 400);          // next
-        this.farmerPath.lineTo(150, 150);          // and back to start
-        this.farmerPath.draw(this.graphics);            // draw path
-        let s = this.farmerPath.getStartPoint();   // get start point of path
-        // add path follower: follower(path, x, y, texture [, frame])
-        //farmer = scene.add.follower(this.farmerPath, s.x, s.y, 'farmer').setScale(0.5);
+        //choose random path (excluding the given path)
+        let randomIndex = Phaser.Math.Between(0,this.paths.length - 1); //random integer inclusive
+        //console.log(pathName);
+        if(pathName == this.paths[randomIndex].name) {//if this is the same path
+            //increment randomIndex to get a different random path
+            randomIndex = (randomIndex == this.paths.length - 1) ? 0 : randomIndex++;
+        }
+        farmer.setPath(this.paths[randomIndex]);
+        let startPoint = this.paths[randomIndex].getStartPoint();
+        farmer.setPosition(startPoint.x,startPoint.y); //TODO:
         // start path follow with config
         // note: you can mix properties from both types of config objects
         // https://photonstorm.github.io/phaser3-docs/Phaser.Types.Tweens.html#.NumberTweenBuilderConfig
         // https://photonstorm.github.io/phaser3-docs/Phaser.Types.GameObjects.PathFollower.html#.PathConfig
-        farmer.startFollow({
+        let pathConfig = {
+            startAt: 0,
             from: 0,            // points allow a path are values 0–1
             to: 1,
             delay: 0,
             duration: 10000,
             ease: 'Power0',
             hold: 0,
-            repeat: -1,
+            repeat: 0,
             yoyo: false,
-            rotateToPath: true
-        });
+            rotateToPath: false
+        };
+        farmer.startFollow(pathConfig);
     }
 
-    execute(scene, farmer, audios, transitioning) {
+    execute(scene, farmer, audios) {
         //if(super.checkAlerts()) //if the farmer has been altered in some manner
         //transition to search state
         //if farmer is on top of a crop
@@ -169,9 +174,56 @@ class WalkState extends FarmerState {
         //if success, transition to water state (pass it the current path)
         //on path complete
         //transition to walk state again (passing the current path) (AKA: finds a new path)
+
+        if(!farmer.isFollowing()) {
+            //used a delayed call because of update issue calling this before enter method completes
+            scene.time.delayedCall(100, () => {
+                if(!farmer.isFollowing()) {
+                    //console.log(farmer.path.name);
+                    this.stateMachine.transition("walk", farmer.path.name);
+                }
+            }, null, this);
+        }
     }
 
-    createPaths() {
+    createPaths(scene) {
+        let path1 = scene.add.path(100, 100); // start of path
+        path1.lineTo(100, 300);         // next path point
+        path1.lineTo(150, 500);         // next
+        path1.lineTo(200, 400);          // next
+        path1.lineTo(150, 150);          // and back to start
+        path1.draw(this.graphics);            // draw path
+        this.paths.push(path1);
 
+        let path2 = scene.add.path(300, 100); // start of path
+        path2.lineTo(500, 300);         // next path point
+        path2.lineTo(600, 500);         // next
+        path2.lineTo(400, 400);          // next
+        path2.lineTo(200, 150);          // and back to start
+        path2.draw(this.graphics);            // draw path
+        this.paths.push(path2);
+
+        // //create a paths from paths object layer in the tilemap
+        // for(let i = 1; ; i++) {
+        //     let pathStart = map.findObject("Path", obj => obj.name === ("p" + i + "spawn"));
+        //     if(pathStart) {//TODO: figure out how to test if an object was found //if the path point was found
+        //         let path = scene.add.path(pathStart.x,pathStart.y);
+        //         for(let j = 1; ; j++){
+        //             let pathPoint = map.findObject("Path", obj => obj.name === ("p" + i + "point" + j));
+        //             if(pathPoint) //if the next path point was found
+        //             path.lineTo(pathPoint.x,pathPoint.y);
+        //             else
+        //                 break;
+        //         }
+        //     }
+        //     else
+        //         break; //couldn't find another path to create
+        // }
+        
+        //for let loop uses destructuring to get both the element and index of the array
+        //https://flaviocopes.com/how-to-get-index-in-for-of-loop/
+        for(let [index, path] of this.paths.entries()) {
+            path.name = "p" + index; //give each path a name to check in pathfinding
+        }
     }
 }
