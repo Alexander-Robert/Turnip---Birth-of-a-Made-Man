@@ -23,19 +23,27 @@ class Play extends Phaser.Scene {
 
         //add tileset to map
         const field_tileset = field.addTilesetImage("field_set", "field_set");
+        const object_tileset = field.addTilesetImage("object_set", "object_set");
 
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
+        this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        
 
         //create our player character
         this.turnip = new Turnip(this, 100, 100, "turnip", 0, 'down').setScale(0.25);
+
+        //create out farmer AI
+        this.farmer = new Farmer(this, 500, 500, 'farmer', 0, 'down');
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
 
         //set collisions
-        this.backgroundLayer.setCollision([2, 4, 5]);
+        this.backgroundLayer.setCollision([4, 5]);
+        this.terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
+        this.physics.add.collider(this.turnip, this.terrainLayer);
 
         //add UI images
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
@@ -88,7 +96,6 @@ class Play extends Phaser.Scene {
             fixedWidth: 0
         }
 
-        //TODO: figure out how to have text not scroll
         this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
         this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
         this.scoreText.setScrollFactor(0);
@@ -101,11 +108,26 @@ class Play extends Phaser.Scene {
             steal: new StealState(this),
             burrow: new BurrowState(this),
         }, [this, this.turnip, this.audios]);
+
+        // //define the Finite State Machine (FSM) behaviors for the farmer AI
+        // this.farmerFSM = new StateMachine('walk', {
+        //     search: new SearchState(this),
+        //     chase: new ChaseState(this),
+        //     walk: new WalkState(this),
+        //     water: new WaterState(this),
+        //     bury: new BuryState(this),
+        // }, [this, this.farmer, this.audios, this.turnip]);
+
+        // this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, tile) => {
+        //     console.log("destroy");
+        //     tile.destroy();
+        // });
     }
 
     update() {
         //process current step within the turnipFSM
         this.turnipFSM.step();
+        //this.farmerFSM.step();
 
         //TODO: reorganize this logic to work with turnip interacting with specific tiles
         if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {
