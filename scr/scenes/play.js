@@ -27,7 +27,8 @@ class Play extends Phaser.Scene {
 
         //create tilemap layers
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
-        const terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
+        this.cropsLayer = field.createLayer("crops", object_tileset, 0 ,0);
         
 
         //create our player character
@@ -38,9 +39,9 @@ class Play extends Phaser.Scene {
 
         //set collisions
         this.backgroundLayer.setCollision([4, 5]);
-        terrainLayer.setCollision([7, 8]);
+        this.terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
-        this.physics.add.collider(this.turnip, terrainLayer);
+        this.physics.add.collider(this.turnip, this.terrainLayer);
 
         //add UI images
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
@@ -106,6 +107,20 @@ class Play extends Phaser.Scene {
             steal: new StealState(this),
             burrow: new BurrowState(this),
         }, [this, this.turnip, this.audios]);
+        
+
+        //crop collision
+        this.radishes = field.createFromObjects("objects", {
+            name: "radish",
+            key: "object_set",
+            frame: 3
+        });
+
+        this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);
+        this.radishGroup = this.add.group(this.radishes);
+        this.physics.add.overlap(this.turnip, this.radishGroup, (obj1, obj2) => {
+            obj2.destroy(); // remove coin on overlap
+        });
     }
 
     update() {
@@ -113,12 +128,12 @@ class Play extends Phaser.Scene {
         //process current step within the turnipFSM
         this.turnipFSM.step();
         
-        this.physics.world.collide(this.turnip, this.terrainLayer, (turnip, crop) => {
-            if (crop.properties.crop == true) {
-            console.log("destroy");
-            crop.destroy();
-            }
-        });
+        //this.physics.add.overlap(this.turnip, this.cropsLayer, (crop) => {
+        //    if (crop.properties.crop == true) {
+        //        console.log("destroy");
+        //       crop.destroy();
+        //    }
+        //});
 
 
         //TODO: reorganize this logic to work with turnip interacting with specific tiles
