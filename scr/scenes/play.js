@@ -15,6 +15,9 @@ class Play extends Phaser.Scene {
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        //create audios object of different audios
+        this.createAudio();
+
         //create background tilemap
         const field = this.add.tilemap("field_test");
 
@@ -28,20 +31,7 @@ class Play extends Phaser.Scene {
         
 
         //create our player character
-        this.turnip = new Turnip(this, 100, 
-            100, "turnip", 0, 'down').setScale(0.25);
-
-        //console.log(JSON.stringify(this.field.getTileAt(this.terrainLayer.worldToTileX(this.turnip.body.position.x, true), 
-        //this.terrainLayer.worldToTileY(this.turnip.body.position.y, true), true, this.terrainLayer).properties));
-
-
-        //define the Finite State Machine (FSM) behaviors for the player
-        this.turnipFSM = new StateMachine('idle', {
-            idle: new IdleState(this),
-            move: new MoveState(this),
-            steal: new StealState(this),
-            burrow: new BurrowState(this),
-        }, [this, this.turnip]);
+        this.turnip = new Turnip(this, 100, 100, "turnip", 0, 'down').setScale(0.25);
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
@@ -59,8 +49,10 @@ class Play extends Phaser.Scene {
         this.tower.setScrollFactor(0);
         this.pescotti = this.add.sprite(this.shop.x, this.shop.y, "pescotti").setOrigin(0);
         this.pescotti.setScrollFactor(0);
+
         //camera definitions
         //lock camera to map size bounds
+        this.cameras.main.setName("main");
         this.cameras.main.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
@@ -70,6 +62,7 @@ class Play extends Phaser.Scene {
         //TODO: fix it so minimap moves just like the main camera
         //TODO: create variables/consts to replace hard codes values with
         this.minimap = this.cameras.add(1280, 0, 1280, 736 / 4).setZoom(0.25);
+        this.minimap.setName("minimap");
         this.minimap.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.minimap.startFollow(this.turnip, true, 1, 0.5);
@@ -77,7 +70,42 @@ class Play extends Phaser.Scene {
 
         this.minimap.ignore(this.shop);
         this.minimap.ignore(this.tower);
-        this.minimap.ignore(this.pescotti);        
+        this.minimap.ignore(this.pescotti);
+
+        //temp keys for testing stats //TODO: remove when you've implemented interactions with tiles
+        this.keys.Mkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+        this.keys.Nkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+        this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
+
+        //define stats
+        this.score = 0;
+        this.crops = 0;
+
+        //text configuration
+        let textConfig = {
+            fontFamily: 'Courier',
+            fontSize: '48px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 0
+        }
+
+        //TODO: figure out how to have text not scroll
+        this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
+        this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
+
+        //define the Finite State Machine (FSM) behaviors for the player
+        this.turnipFSM = new StateMachine('idle', {
+            idle: new IdleState(this),
+            move: new MoveState(this),
+            steal: new StealState(this),
+            burrow: new BurrowState(this),
+        }, [this, this.turnip, this.audios]);
     }
 
     update() {
@@ -92,6 +120,27 @@ class Play extends Phaser.Scene {
             }
         });
 
+
+        //TODO: reorganize this logic to work with turnip interacting with specific tiles
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {
+            this.crops++;
+            this.cropsText.text = "c:" + this.crops;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Nkey)) {
+            this.score += this.crops;
+            this.crops = 0;
+            this.cropsText.text = "c:" + this.crops;
+            this.scoreText.text = "s:" + this.score;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
+            this.scene.start("menuScene");
+        }
+    }
+
+    //defines all audios into an object to pass to FSM that uses it.
+    createAudio() {
+        this.audios  = {};
+        this.audios.running = this.sound.add('running', { loop: true });
     }
 
     
@@ -99,11 +148,11 @@ class Play extends Phaser.Scene {
 
     //defines all the animations used in play.js
     createAnimations() {
-        this.anims.create({
-            key: 'move-down',
-            frameRate: 16,
-            repeat: -1,
-            frames: this.anims.generateFrameNames() //TODO: fill this out
-        });
+        // this.anims.create({
+        //     key: 'move-down',
+        //     frameRate: 16,
+        //     repeat: -1,
+        //     frames: this.anims.generateFrameNames() //TODO: fill this out
+        // });
     }
 }

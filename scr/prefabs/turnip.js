@@ -54,7 +54,8 @@ class IdleState extends TurnipState {
     execute(scene, turnip) {
         //check for transitions
         //TODO: see if we want .JustDown(SPACE) or SPACE.isDown
-        if(this.SPACE.isDown) { //if the interact key is pressed 
+        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
+            this.stateMachine.transition('burrow');
             //check type of tile turnip is on. 
                 //If the type is an interactible tile, 
                 //transition to the corresponding state
@@ -70,12 +71,13 @@ class IdleState extends TurnipState {
 class MoveState extends TurnipState {
     constructor(scene) {super(scene);} //pass the scene into TurnipState to define the keys, methods, etc.
 
-    enter(scene, turnip){
-        //turnip.tint = "#00FF00";
+    enter(scene, turnip, audios){
+        audios.running.play();
     }
     execute(scene, turnip) {
         //check for transitions
-        if(this.SPACE.isDown) { //if the interact key is pressed 
+        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
+            this.stateMachine.transition('burrow');
             //check type of tile turnip is on. 
                 //If the type is an interactible tile, 
                 //transition to the corresponding state
@@ -109,28 +111,89 @@ class MoveState extends TurnipState {
         // handle animation
         //turnip.anims.play(`walk-${turnip.direction}`, true);
     }
+    exit(scene, turnip, audios) {
+        audios.running.stop();
+        //ensures turnip stops moving when exiting the move state
+        turnip.body.setVelocity(0); 
+    }
 }
 
 class StealState extends TurnipState {
     constructor(scene) {super(scene);}
 
-    enter() {
+    enter(scene, turnip, audios) {
 
     }
 
-    execute() {
+    execute(scene, turnip, audios) {
 
     }
 }
 
 class BurrowState extends TurnipState {
-    constructor(scene) {super(scene);}
+    constructor(scene) { 
+        super(scene);
+        this.turnipUI = scene.physics.add.sprite(800, 800, 'turnip').setSize(0.75);
+        this.turnipUI.setScrollFactor(0);
+        this.turnipUI.velocity = 150;
+        this.turnipUI.alpha = 0;
+    }
 
-    enter() {
+    enter(scene, turnip, audios) {
+        //play burrow animation
+        //on animation complete
+            //make turnip invisible
+            //ask farmerFSM if it should cover the hole or not.
+            //create a separate sprite in the shop UI that player controls
+            //play an entrance animation to the shop UI
+        
+        turnip.body.setVelocity(0);
+        turnip.alpha = 0;
+        this.turnipUI.body.position.x = 800;
+        this.turnipUI.alpha = 1;
 
     }
 
-    execute() {
-        
+    execute(scene, turnip, audios) {
+        //check for transitions
+        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
+            this.stateMachine.transition('idle');
+            //check type of tile turnip is on. 
+                //If the type is an interactible tile, 
+                //transition to the corresponding state
+
+            //return; //for after the correct transition is executed.
+        }
+
+        // handle movement
+        if((this.A.isDown) && (this.turnipUI.body.position.x > 215)) { //Left is pressed
+                this.turnipUI.body.setVelocityX(-this.turnipUI.velocity);
+                //TODO: flip sprite image left facing
+        } else if((this.D.isDown) && (this.turnipUI.body.position.x < 1215)) { //Right is pressed
+                this.turnipUI.body.setVelocityX(this.turnipUI.velocity);
+                //TODO: flip sprite image right facing 
+        }
+        //if NONE of the move keys were pressed
+        else {
+            this.turnipUI.body.setVelocityX(0);           
+            //stop moving animation
+            return;
+        }
+
+        // handle animation
+        //turnip.anims.play(`walk-${turnip.direction}`, true);
+    }
+
+    exit(scene, turnip, audios) {
+        //play exit shop animation
+        //on animation complete
+            //delete the separate sprite in the shop UI that player controls
+            //play an exit burrow animation
+            //make turnip visible again
+
+            turnip.alpha = 1;
+
+            this.turnipUI.body.setVelocityX(0);
+            this.turnipUI.alpha = 0;
     }
 }

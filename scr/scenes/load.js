@@ -11,6 +11,9 @@ class Load extends Phaser.Scene {
         this.load.image("field_set", "tileset.png");
         this.load.image("object_set", "objects.png");
         this.load.tilemapTiledJSON("field_test", "field_new.json");
+        this.load.tilemapTiledJSON("field_test", "field_test.json");
+
+        this.load.audio("running", "running.wav");
     }
     create() {
         console.log("created loadScene!");
