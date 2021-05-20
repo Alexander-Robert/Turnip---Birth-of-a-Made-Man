@@ -29,7 +29,7 @@ class Play extends Phaser.Scene {
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
         this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
         this.cropsLayer = field.createLayer("crops", object_tileset, 0 ,0);
-        
+        this.pathsLayer = field.createLayer("paths", object_tileset, 0 ,0);
 
         //create our player character
         this.turnip = new Turnip(this, 400, 100, "turnip", 0, 'down').setScale(0.25);
@@ -115,7 +115,9 @@ class Play extends Phaser.Scene {
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this),
             chase: new ChaseState(this),
-            walk: new WalkState(this),
+            //TODO: create a findPathState to create a path 
+            //for the farmer to follow to get back to it's normal walk state path routes
+            walk: new WalkState(this, field, this.farmer),
             water: new WaterState(this),
             bury: new BuryState(this),
         }, [this, this.farmer, this.audios, this.turnip]);
@@ -124,7 +126,7 @@ class Play extends Phaser.Scene {
         this.radishes = field.createFromObjects("objects", {
             name: "radish",
             key: "object_set",
-            frame: 3
+            frame: 0
         });
 
         this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);

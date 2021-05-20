@@ -123,10 +123,32 @@ class WaterState extends FarmerState {
 //chooses a random path in subset of paths to follow
 //on path complete, follows a different random path
 class WalkState extends FarmerState {
-    constructor(scene) {
+    constructor(scene, map, farmer) {
         super(scene);
         this.paths = []; //array of different paths
-        this.createPaths(scene);
+        this.createPaths(scene, map);
+        farmer.setPath(this.paths[0]);
+        let startPoint = this.paths[0].getStartPoint();
+        farmer.setPosition(startPoint.x, startPoint.y);
+
+        // create the pathConfig defining details for the farmer following paths
+        // note: you can mix properties from both types of config objects
+        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.Tweens.html#.NumberTweenBuilderConfig
+        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.GameObjects.PathFollower.html#.PathConfig
+        this.pathConfig = {
+            startAt: 0,
+            from: 0,            // points allow a path are values 0–1
+            to: 1,
+            delay: 0,
+            //TODO: replace duration's number with binding calculated by the path's length
+            //to have the farmer walk at the same speed reguardless of the path's length
+            duration: 1000,
+            ease: 'Power0',
+            hold: 0,
+            repeat: 0,
+            yoyo: false,
+            rotateToPath: false
+        };
     }
 
     enter(scene, farmer, audios, turnip, pathName, wateredPlant) {
@@ -135,35 +157,47 @@ class WalkState extends FarmerState {
         //else
         //choose random path (excluding the given path)
         //follow path
-        
-        console.log("walk state");
-        //choose random path (excluding the given path)
-        let randomIndex = Phaser.Math.Between(0,this.paths.length - 1); //random integer inclusive
-        //console.log(pathName);
-        if(pathName == this.paths[randomIndex].name) {//if this is the same path
-            //increment randomIndex to get a different random path
-            randomIndex = (randomIndex == this.paths.length - 1) ? 0 : randomIndex++;
+        if (!(pathName === undefined)) {
+            //create an array of the possible paths for the farmer to follow given it's starting point
+            let possiblePaths = [];
+            for (let path of this.paths) {
+                //rounding so it actually finds starting points for the correct paths
+                if (Math.round(path.startPoint.x) == Math.round(farmer.x)
+                    && Math.round(path.startPoint.y) == Math.round(farmer.y))
+                    possiblePaths.push(path);
+            }
+
+            //choose random path from the possible paths (excluding the given path)
+            let randomIndex = Phaser.Math.Between(0, possiblePaths.length - 1); //random integer inclusive
+
+            //find the path the farmer just took
+            let previousPath = null;
+            for (let path of this.paths) {
+                if (path.name == pathName) {
+                    previousPath = path;
+                    break;
+                }
+            }
+            if (previousPath == null) {
+                console.warn(`couldn't find path given path name: ${pathName}`);
+            }
+            else {
+                //if they are going to follow the same path they just took, change it to a different one.
+                if (Math.round(previousPath.startPoint.x) == Math.round(possiblePaths[randomIndex].getEndPoint().x)
+                    && Math.round(previousPath.startPoint.y) == Math.round(possiblePaths[randomIndex].getEndPoint().y)) {
+                    //increment randomIndex to get a different random path
+                    randomIndex = (randomIndex == possiblePaths.length - 1) ? 0 : (randomIndex + 1);
+                }
+            }
+
+            //follow that path
+            farmer.setPath(possiblePaths[randomIndex]);
+            //TODO: see if you still need to set farmer position to the start position
+            //(might be helpful so small rounding errors don't add up over time)
+            let startPoint = possiblePaths[randomIndex].getStartPoint();
+            farmer.setPosition(startPoint.x, startPoint.y);
         }
-        farmer.setPath(this.paths[randomIndex]);
-        let startPoint = this.paths[randomIndex].getStartPoint();
-        farmer.setPosition(startPoint.x,startPoint.y); //TODO:
-        // start path follow with config
-        // note: you can mix properties from both types of config objects
-        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.Tweens.html#.NumberTweenBuilderConfig
-        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.GameObjects.PathFollower.html#.PathConfig
-        let pathConfig = {
-            startAt: 0,
-            from: 0,            // points allow a path are values 0–1
-            to: 1,
-            delay: 0,
-            duration: 10000,
-            ease: 'Power0',
-            hold: 0,
-            repeat: 0,
-            yoyo: false,
-            rotateToPath: false
-        };
-        farmer.startFollow(pathConfig);
+        farmer.startFollow(this.pathConfig);
     }
 
     execute(scene, farmer, audios) {
@@ -175,54 +209,54 @@ class WalkState extends FarmerState {
         //on path complete
         //transition to walk state again (passing the current path) (AKA: finds a new path)
 
-        if(!farmer.isFollowing()) {
+        if (!farmer.isFollowing()) {
             //used a delayed call because of update issue calling this before enter method completes
             scene.time.delayedCall(100, () => {
-                if(!farmer.isFollowing()) {
-                    //console.log(farmer.path.name);
+                if (!farmer.isFollowing()) {
                     this.stateMachine.transition("walk", farmer.path.name);
                 }
             }, null, this);
         }
     }
 
-    createPaths(scene) {
-        let path1 = scene.add.path(100, 100); // start of path
-        path1.lineTo(100, 300);         // next path point
-        path1.lineTo(150, 500);         // next
-        path1.lineTo(200, 400);          // next
-        path1.lineTo(150, 150);          // and back to start
-        path1.draw(this.graphics);            // draw path
-        this.paths.push(path1);
+    createPaths(scene, map) {
+        //create all paths from paths object layer in the tilemap
+        for (let i = 1; ; i++) {
+            //find each path start
+            let pathStart = map.findObject("paths", obj => obj.name === ("p" + i + "start"));
+            if (pathStart != null) { //if the path point was found
+                //add it to the path object
+                let path = scene.add.path(pathStart.x, pathStart.y);
+                for (let j = 1; ; j++) {
+                    //for every point on that path, add a line to each point in order
+                    let pathPoint = map.findObject("paths", obj => obj.name === ("p" + i + "point" + j));
+                    if (pathPoint != null) //if the next path point was found
+                        path.lineTo(pathPoint.x, pathPoint.y);
+                    else
+                        break;
+                }
+                path.draw(this.graphics);
+                //enter the path into the paths array
+                this.paths.push(path);
+                //copy the reverse of the path (creates bidirectional pathing for farmer's passive walking routes)
+                let reverseArray = path.getPoints().reverse();
+                // reverseArray.reverse();
+                let reversePath = null;
+                for (let point of reverseArray) {
+                    if (reversePath == null)
+                        reversePath = scene.add.path(reverseArray[0].x, reverseArray[0].y);
+                    else
+                        reversePath.lineTo(point.x, point.y);
+                }
+                this.paths.push(reversePath);
+            }
+            else
+                break; //couldn't find another path to create
+        }
 
-        let path2 = scene.add.path(300, 100); // start of path
-        path2.lineTo(500, 300);         // next path point
-        path2.lineTo(600, 500);         // next
-        path2.lineTo(400, 400);          // next
-        path2.lineTo(200, 150);          // and back to start
-        path2.draw(this.graphics);            // draw path
-        this.paths.push(path2);
-
-        // //create a paths from paths object layer in the tilemap
-        // for(let i = 1; ; i++) {
-        //     let pathStart = map.findObject("Path", obj => obj.name === ("p" + i + "spawn"));
-        //     if(pathStart) {//TODO: figure out how to test if an object was found //if the path point was found
-        //         let path = scene.add.path(pathStart.x,pathStart.y);
-        //         for(let j = 1; ; j++){
-        //             let pathPoint = map.findObject("Path", obj => obj.name === ("p" + i + "point" + j));
-        //             if(pathPoint) //if the next path point was found
-        //             path.lineTo(pathPoint.x,pathPoint.y);
-        //             else
-        //                 break;
-        //         }
-        //     }
-        //     else
-        //         break; //couldn't find another path to create
-        // }
-        
         //for let loop uses destructuring to get both the element and index of the array
         //https://flaviocopes.com/how-to-get-index-in-for-of-loop/
-        for(let [index, path] of this.paths.entries()) {
+        for (let [index, path] of this.paths.entries()) {
             path.name = "p" + index; //give each path a name to check in pathfinding
         }
     }

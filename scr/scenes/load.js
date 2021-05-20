@@ -11,7 +11,11 @@ class Load extends Phaser.Scene {
         this.load.image("pescotti", "pescotti.png");
         this.load.image("field_set", "tileset.png");
         this.load.audio("running", "running.wav");
-        this.load.image("object_set", "objects.png");
+        this.load.audio("harvest", "rustle.ogg");
+        this.load.spritesheet("object_set", "objects.png", {
+            frameWidth: 32,
+            frameHeight: 32
+        });
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
