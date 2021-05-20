@@ -253,11 +253,18 @@ class BurrowState extends TurnipState {
             turnip.body.setVelocity(0);
         //check for transitions
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed
-            //if overlapping with UI sprite hole,
-            turnip.setPosition(
-                field.tileToWorldX(this.holes[this.holeIndex].location.x),
-                field.tileToWorldY(this.holes[this.holeIndex].location.y));
-            this.stateMachine.transition('idle');
+            //check if turnip is overlapping with any exit tunnels (AKA trying to leave the shop)
+            for(let hole of this.holes){
+                //TODO, if multiple holes are overlapping check which is closer to turnip and select that one.
+                // console.log(this.checkOverlap(this.turnipUI, hole.sprite));
+                if(this.checkOverlap(this.turnipUI, hole.sprite)){
+                    turnip.setPosition(
+                        field.tileToWorldX(hole.location.x),
+                        field.tileToWorldY(hole.location.y));
+                        this.stateMachine.transition('idle');
+                }
+            }
+            
             //check type of tile turnip is on.
             //If the type is an interactible tile, 
             //transition to the corresponding state
@@ -299,13 +306,17 @@ class BurrowState extends TurnipState {
 
     findHole(tile) {
         for (let i = 0; i < this.holes.length; ++i) {
-            console.log(tile.x + " " + tile.y);
-            console.log(this.holes[i].location.x + " " + this.holes[i].location.y);
             if (tile.x == this.holes[i].location.x && tile.y == this.holes[i].location.y){
-                    console.log(i);
                     return i;
                 }
         }
         return 0;
+    }
+
+    //seems easier than doing physics collision because we only need on key press collision checking
+    checkOverlap(turnip, hole) {
+        let boundsA = turnip.getBounds();
+        let boundsB = hole.getBounds();
+        return Phaser.Geom.Intersects.RectangleToRectangle(boundsA,boundsB);
     }
 }
