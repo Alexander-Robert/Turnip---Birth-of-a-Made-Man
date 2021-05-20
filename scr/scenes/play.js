@@ -109,7 +109,7 @@ class Play extends Phaser.Scene {
             move: new MoveState(this),
             steal: new StealState(this),
             burrow: new BurrowState(this),
-        }, [this, this.turnip, this.audios]);
+        }, [this, this.turnip, this.audios, field]);
 
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {

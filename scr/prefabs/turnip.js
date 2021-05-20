@@ -33,9 +33,68 @@ class TurnipState extends State {
         //subclasses will call super.execute(scene, turnip, ...args); to use the common behaviors
     }
 
-    checkTileType() { //probably will need the scene parameter to access the current tile.
-        //define the check tile type and have it return the name for it.
-        //TODO: see if we should implement the interact key transitions here (is it even possible?)
+    checkTileType(scene, turnip, field) {
+        //returns the tile and tile name that turnip is currently on.
+        
+        //check all corners of turnip and determine what tile the player probably wants to interact with
+        //aka if there's only 1 interactible tile found in all corners of turnip, return that tile
+        //otherwise return the tile in the center
+        let turnipTopLeft = {
+            x: turnip.body.position.x, 
+            y:turnip.body.position.y};
+        let turnipTopRight = {
+            x: turnip.body.position.x + (turnip.width * turnip.scaleX), 
+            y:turnip.body.position.y};
+        let turnipBottomLeft = {
+            x: turnip.body.position.x, 
+            y:turnip.body.position.y + (turnip.height * turnip.scaleY)};
+        let turnipBottomRight = {
+            x: turnip.body.position.x + (turnip.width * turnip.scaleX), 
+            y:turnip.body.position.y + (turnip.height * turnip.scaleY)};
+        let turnipCenter = {x: turnip.body.position.x + ((turnip.width * turnip.scaleX)/2), 
+            y:turnip.body.position.y + ((turnip.height * turnip.scaleY)/2)};
+        let turnipCorners = [turnipTopLeft,turnipTopRight,turnipBottomLeft,turnipBottomRight];
+        let tiles = [];
+        let uniqueTiles = 0;
+        let tile;
+        for(let i = 0; i < 4; ++i){
+            tiles.push(
+                field.getTileAt(
+                field.worldToTileX(turnipCorners[i].x),
+                field.worldToTileY(turnipCorners[i].y), 
+                true, "crops"));
+            if(tiles[i].index != -1)
+                uniqueTiles++;
+        }
+        
+        //if there's only 1 interactible tile around turnip
+        //that's probably the tile the player wanted to choose
+        if(uniqueTiles == 1) { 
+            for(let t of tiles) {
+                if (t.index != -1){
+                    tile = t;
+                    break;
+                }
+            }
+        }
+        else{ //otherwise (0 or unique tiles > 1 )
+            tile = field.getTileAt(
+                field.worldToTileX(turnipCenter.x),
+                field.worldToTileY(turnipCenter.y), 
+                true, "crops");
+            }
+
+        switch(tile.index){
+            case -1:
+                return {tile: tile, name: "none"};
+            case 6:
+                return {tile: tile, name: "crop"};
+            case 8:
+                return {tile: tile, name: "hole"};
+            default:
+                console.warn("found some other tile not listed");
+                return {tile: tile, name: "other"};
+        }
     }
 }
 
@@ -51,11 +110,12 @@ class IdleState extends TurnipState {
         //turnip.anims.stop(); 
     }
 
-    execute(scene, turnip) {
+    execute(scene, turnip, audios, field) {
         //check for transitions
         //TODO: see if we want .JustDown(SPACE) or SPACE.isDown
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
-            this.stateMachine.transition('burrow');
+            console.log(super.checkTileType(scene, turnip, field));
+            //this.stateMachine.transition('burrow');
             //check type of tile turnip is on. 
                 //If the type is an interactible tile, 
                 //transition to the corresponding state
