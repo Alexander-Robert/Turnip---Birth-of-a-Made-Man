@@ -81,8 +81,9 @@ class Play extends Phaser.Scene {
         this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 
         //define stats
-        this.score = 0;
-        this.crops = 0;
+        this.stats = {};
+        this.stats.score = 0;
+        this.stats.crops = 0;
 
         //text configuration
         let textConfig = {
@@ -98,8 +99,8 @@ class Play extends Phaser.Scene {
             fixedWidth: 0
         }
 
-        this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
-        this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
+        this.scoreText = this.add.text(1280,736, "s:" + this.stats.score, textConfig);
+        this.cropsText = this.add.text(1280,786, "c:" + this.stats.crops, textConfig);
         this.scoreText.setScrollFactor(0);
         this.cropsText.setScrollFactor(0);
 
@@ -107,7 +108,7 @@ class Play extends Phaser.Scene {
         this.turnipFSM = new StateMachine('idle', {
             idle: new IdleState(this),
             move: new MoveState(this),
-            steal: new StealState(this),
+            steal: new StealState(this, this.stats),
             burrow: new BurrowState(this),
         }, [this, this.turnip, this.audios, field]);
 
@@ -121,38 +122,20 @@ class Play extends Phaser.Scene {
             water: new WaterState(this),
             bury: new BuryState(this),
         }, [this, this.farmer, this.audios, this.turnip]);
-
-        //crop collision
-        this.radishes = field.createFromObjects("objects", {
-            name: "radish",
-            key: "object_set",
-            frame: 0
-        });
-
-        this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);
-        this.radishGroup = this.add.group(this.radishes);
-        this.physics.add.overlap(this.turnip, this.radishGroup, (obj1, obj2) => {
-            obj2.destroy(); // remove radish crop on overlap
-            this.sound.play('harvest', {volume: 0.5});
-        });
     }
 
     update() {
-        //process current step within the turnipFSM
-        this.turnipFSM.step();
-        this.farmerFSM.step();
+        //process current step within the turnipFSM and farmerFSM
+        let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
+        let farmerStep = this.farmerFSM.step();
 
-        //TODO: reorganize this logic to work with turnip interacting with specific tiles
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {
-            this.crops++;
-            this.cropsText.text = "c:" + this.crops;
+        if(turnipStep == "steal") { //update the text
+            this.cropsText.text = "c:" + this.stats.crops;
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Nkey)) {
-            this.score += this.crops;
-            this.crops = 0;
-            this.cropsText.text = "c:" + this.crops;
-            this.scoreText.text = "s:" + this.score;
+        if(turnipStep == "burrow") { //update the text
+            this.scoreText.text = "s:" + this.stats.score;
         }
+        //TODO: remove B button when win/loss condition is working
         if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
             this.scene.start("menuScene");
         }
@@ -162,6 +145,7 @@ class Play extends Phaser.Scene {
     createAudio() {
         this.audios  = {};
         this.audios.running = this.sound.add('running', { loop: true });
+        this.audios.harvest = this.sound.add('harvest', {volume: 0.5});
     }
 
     //defines all the animations used in play.js

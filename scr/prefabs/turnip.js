@@ -57,13 +57,13 @@ class TurnipState extends State {
         let tiles = [];
         let uniqueTiles = 0;
         let tile;
-        for(let i = 0; i < 4; ++i){
+        for(let i = 0; i < turnipCorners.length; ++i){
             tiles.push(
                 field.getTileAt(
                 field.worldToTileX(turnipCorners[i].x),
                 field.worldToTileY(turnipCorners[i].y), 
                 true, "crops"));
-            if(tiles[i].index != -1)
+            if((tiles[i].index != -1))
                 uniqueTiles++;
         }
         
@@ -93,6 +93,7 @@ class TurnipState extends State {
                 return {tile: tile, name: "hole"};
             default:
                 console.warn("found some other tile not listed");
+                console.log(tile);
                 return {tile: tile, name: "other"};
         }
     }
@@ -104,7 +105,6 @@ class IdleState extends TurnipState {
 
     enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
-        //if(turnip.isTinted) turnip.clearTint();
         //play the stop (reset turnip to be a static idle image instead of an animation) 
         //turnip.anims.play(`walk-${turnip.direction}`);
         //turnip.anims.stop(); 
@@ -112,13 +112,20 @@ class IdleState extends TurnipState {
 
     execute(scene, turnip, audios, field) {
         //check for transitions
-        //TODO: see if we want .JustDown(SPACE) or SPACE.isDown
-        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
-            console.log(super.checkTileType(scene, turnip, field));
-            //this.stateMachine.transition('burrow');
-            //check type of tile turnip is on. 
-                //If the type is an interactible tile, 
-                //transition to the corresponding state
+        //if the interact key is pressed 
+        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { 
+            let tileInfo = super.checkTileType(scene, turnip, field);
+            if(tileInfo.name == "crop") {
+                this.stateMachine.transition('steal', tileInfo);
+                return;
+            }
+
+            if(tileInfo.name == "hole"){
+                //TODO: see if we need to give burrow additional info
+                this.stateMachine.transition('burrow'); 
+                return;
+
+            }
         }
 
         if(this.W.isDown || this.A.isDown || this.S.isDown || this.D.isDown) { //if any of the move keys were pressed
@@ -134,15 +141,22 @@ class MoveState extends TurnipState {
     enter(scene, turnip, audios){
         audios.running.play();
     }
-    execute(scene, turnip, audios, transitioning) {
-        //check for transitions
-        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed 
-            this.stateMachine.transition('burrow');
-            //check type of tile turnip is on. 
-                //If the type is an interactible tile, 
-                //transition to the corresponding state
+    execute(scene, turnip, audios, field) {
+                //check for transitions
+        //if the interact key is pressed 
+        if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { 
+            let tileInfo = super.checkTileType(scene, turnip, field);
+            if(tileInfo.name == "crop") {
+                this.stateMachine.transition('steal', tileInfo);
+                return;
+            }
 
-            //return; //for after the correct transition is executed.
+            if(tileInfo.name == "hole"){
+                //TODO: see if we need to give burrow additional info
+                this.stateMachine.transition('burrow'); 
+                return;
+
+            }
         }
 
         //if NONE of the move keys were pressed
@@ -178,14 +192,29 @@ class MoveState extends TurnipState {
 }
 
 class StealState extends TurnipState {
-    constructor(scene) {super(scene);}
-
-    enter(scene, turnip, audios) {
-
+    constructor(scene, stats) {
+        super(scene);
+        this.stats = stats;
+        this.tileInfo;
     }
 
-    execute(scene, turnip, audios) {
+    enter(scene, turnip, audios, field, tileInfo) {
+        this.tileInfo = tileInfo;
+        //play stealing animation
+        audios.harvest.play();
+    }
 
+    execute(scene, turnip, audios, field) {
+        //on animation complete
+        this.stats.crops++;
+        let cropsLayer = field.getLayer("crops");
+        console.log(this.tileInfo);
+        //field.removeTile(this.tileInfo.tile);
+        //field.replaceByIndex(6, -1, this.tileInfo.tile.x, this.tileInfo.tile.y);
+        field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);
+        console.log(this.tileInfo);
+        this.stateMachine.transition("idle");
+        return "steal";
     }
 }
 
