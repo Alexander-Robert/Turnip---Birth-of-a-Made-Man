@@ -124,7 +124,8 @@ class Play extends Phaser.Scene {
             fontSize: '48px',
             backgroundColor: '#F3B141',
             color: '#843605',
-            align: 'center',
+            align: 'left',
+            wordWrap: { width: 300, useAdvancedWrap: true },
             padding: {
                 top: 5,
                 bottom: 5,
@@ -132,8 +133,7 @@ class Play extends Phaser.Scene {
             fixedWidth: 0
         }
 
-        this.scoreText = this.add.text(1280,736, `reputation 
-        ` + this.stats.score, textConfig);
+        this.scoreText = this.add.text(1280,736, `reputation ` + this.stats.score, textConfig);
         this.cropsText = this.add.text(1280,826, "crops:" + this.stats.crops, textConfig);
         this.scoreText.setScrollFactor(0);
         this.cropsText.setScrollFactor(0);
@@ -167,8 +167,8 @@ class Play extends Phaser.Scene {
             this.cropsText.text = "crops: " + this.stats.crops;
         }
         if(turnipStep == "burrow") { //update the text
-            this.scoreText.text = `reputation 
-            ` + this.stats.score;
+            this.scoreText.text = `reputation ` + this.stats.score;
+            this.cropsText.text = "crops: " + this.stats.crops;
 
         }
         //TODO: remove B button when win/loss condition is working

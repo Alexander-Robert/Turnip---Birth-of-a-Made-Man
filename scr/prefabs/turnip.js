@@ -229,6 +229,7 @@ class BurrowState extends TurnipState {
         this.turnipUI.velocity = 150;
         this.turnipUI.alpha = 0;
         this.stats = stats;
+        console.log(this.stats);
         this.holes = holes;
     }
 
@@ -264,12 +265,15 @@ class BurrowState extends TurnipState {
                         this.stateMachine.transition('idle');
                 }
             }
-            
+            if ((this.turnipUI.body.position.x < 250)){
+                this.stats.score += this.stats.crops * 5;
+                this.stats.crops = 0;
+            }
             //check type of tile turnip is on.
             //If the type is an interactible tile, 
             //transition to the corresponding state
 
-            //return; //for after the correct transition is executed.
+            return "burrow";
         }
 
         // handle movement
