@@ -142,7 +142,8 @@ class Play extends Phaser.Scene {
         this.turnipFSM = new StateMachine('idle', {
             idle: new IdleState(this),
             move: new MoveState(this),
-            steal: new StealState(this, this.stats),
+            //TODO: make steal and burrow state spawn/delete crops in bag UI respectively. 
+            steal: new StealState(this, this.stats), 
             burrow: new BurrowState(this, this.stats, this.holes),
         }, [this, this.turnip, this.audios, field]);
 

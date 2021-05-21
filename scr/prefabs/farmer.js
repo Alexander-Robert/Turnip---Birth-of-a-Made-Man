@@ -142,7 +142,7 @@ class WalkState extends FarmerState {
             delay: 0,
             //TODO: replace duration's number with binding calculated by the path's length
             //to have the farmer walk at the same speed reguardless of the path's length
-            duration: 1000,
+            duration: 10000,
             ease: 'Power0',
             hold: 0,
             repeat: 0,
