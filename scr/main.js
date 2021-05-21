@@ -11,8 +11,12 @@ Date completed:
 let config = {
     type: Phaser.AUTO,
     pixelArt: true,
-    width: 1280,
-    height: 736,
+    width: 1600,
+    height: 870,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: 'arcade',
         arcade: {

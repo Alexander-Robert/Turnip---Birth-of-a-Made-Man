@@ -29,10 +29,14 @@ class Play extends Phaser.Scene {
         this.backgroundLayer = field.createLayer("ground", field_tileset, 0 ,0);
         this.terrainLayer = field.createLayer("terrain", object_tileset, 0 ,0);
         this.cropsLayer = field.createLayer("crops", object_tileset, 0 ,0);
-        
+        this.pathsLayer = field.createLayer("paths", object_tileset, 0 ,0);
 
         //create our player character
-        this.turnip = new Turnip(this, 100, 100, "turnip", 0, 'down').setScale(0.25);
+        this.turnip = new Turnip(this, 400, 100, "turnip", 0, 'down').setScale(0.25);
+
+        //create out farmer AI (defined as a path follower which extends sprites)
+        let emptyPath = this.add.path();
+        this.farmer = new Farmer(this, emptyPath, 500, 500, 'farmer', 0, 'down');
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
@@ -44,16 +48,50 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
         //add UI images
+        // this.UIgroup = this.add.group({
+        //     runChildUpdate: true,    // make sure update runs on group children
+        // });
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
         this.shop.setScrollFactor(0);
         this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
         this.tower.setScrollFactor(0);
         this.pescotti = this.add.sprite(this.shop.x, this.shop.y, "pescotti").setOrigin(0);
         this.pescotti.setScrollFactor(0);
+        this.bag = this.add.sprite(1158, 736, "bag").setOrigin(0);
+        this.bag.setScrollFactor(0);
+        // this.UIgroup.add(this.shop);
+        // this.UIgroup.add(this.tower);
+        // this.UIgroup.add(this.pescotti);
+        // this.UIgroup.add(this.bag);
+        // let UIarray = this.UIgroup.getChildren();
+        // for (let UIelement of UIarray){
+        //     this.UIelement.setScrollFactor(0);
+        // }
+
+        //find the number of holes in the tilemap
+        //and create holes to match in the UI accordingly
+        let numberOfHoles = 0;
+        this.holes = [];
+        while(true) {
+            let foundHole = field.findByIndex(8, numberOfHoles);
+            if(foundHole == null) break;
+            numberOfHoles++;
+            this.holes.push({
+                sprite: null,
+                location: {
+                    x: foundHole.x,
+                    y: foundHole.y
+                },
+            })
+        }
+        for(let i = 0; i < this.holes.length; i++){
+            this.holes[i].sprite = this.add.sprite(600 + (200 * i), 786, "hole").setScale(0.75);
+            this.holes[i].sprite.setScrollFactor(0);
+        }
+
 
         //camera definitions
         //lock camera to map size bounds
-        this.cameras.main.setName("main");
         this.cameras.main.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
@@ -63,7 +101,6 @@ class Play extends Phaser.Scene {
         //TODO: fix it so minimap moves just like the main camera
         //TODO: create variables/consts to replace hard codes values with
         this.minimap = this.cameras.add(1280, 0, 1280, 736 / 4).setZoom(0.25);
-        this.minimap.setName("minimap");
         this.minimap.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
         //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
         this.minimap.startFollow(this.turnip, true, 1, 0.5);
@@ -73,14 +110,13 @@ class Play extends Phaser.Scene {
         this.minimap.ignore(this.tower);
         this.minimap.ignore(this.pescotti);
 
-        //temp keys for testing stats //TODO: remove when you've implemented interactions with tiles
-        this.keys.Mkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
-        this.keys.Nkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+        //temp keys for testing stats //TODO: remove when you've created win/lose condition
         this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 
         //define stats
-        this.score = 0;
-        this.crops = 0;
+        this.stats = {};
+        this.stats.score = 0;
+        this.stats.crops = 0;
 
         //text configuration
         let textConfig = {
@@ -88,7 +124,8 @@ class Play extends Phaser.Scene {
             fontSize: '48px',
             backgroundColor: '#F3B141',
             color: '#843605',
-            align: 'right',
+            align: 'left',
+            wordWrap: { width: 300, useAdvancedWrap: true },
             padding: {
                 top: 5,
                 bottom: 5,
@@ -96,50 +133,46 @@ class Play extends Phaser.Scene {
             fixedWidth: 0
         }
 
-        //TODO: figure out how to have text not scroll
-        this.scoreText = this.add.text(1280,736, "s:" + this.score, textConfig);
-        this.cropsText = this.add.text(1280,786, "c:" + this.crops, textConfig);
+        this.scoreText = this.add.text(1280,736, `reputation ` + this.stats.score, textConfig);
+        this.cropsText = this.add.text(1280,826, "crops:" + this.stats.crops, textConfig);
+        this.scoreText.setScrollFactor(0);
+        this.cropsText.setScrollFactor(0);
 
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
             idle: new IdleState(this),
             move: new MoveState(this),
-            steal: new StealState(this),
-            burrow: new BurrowState(this),
-        }, [this, this.turnip, this.audios]);
-        
+            //TODO: make steal and burrow state spawn/delete crops in bag UI respectively. 
+            steal: new StealState(this, this.stats), 
+            burrow: new BurrowState(this, this.stats, this.holes),
+        }, [this, this.turnip, this.audios, field]);
 
-        //crop collision
-        this.radishes = field.createFromObjects("objects", {
-            name: "radish",
-            key: "object_set",
-            frame: 3
-        });
-
-        this.physics.world.enable(this.radishes, Phaser.Physics.Arcade.STATIC_BODY);
-        this.radishGroup = this.add.group(this.radishes);
-        this.physics.add.overlap(this.turnip, this.radishGroup, (obj1, obj2) => {
-            obj2.destroy(); // remove radish crop on overlap
-            this.sound.play('harvest', {volume: 0.5});
-        });
+        //define the Finite State Machine (FSM) behaviors for the farmer AI
+        this.farmerFSM = new StateMachine('walk', {
+            search: new SearchState(this),
+            chase: new ChaseState(this),
+            //TODO: create a findPathState to create a path 
+            //for the farmer to follow to get back to it's normal walk state path routes
+            walk: new WalkState(this, field, this.farmer),
+            water: new WaterState(this),
+            bury: new BuryState(this),
+        }, [this, this.farmer, this.audios, this.turnip]);
     }
 
     update() {
+        //process current step within the turnipFSM and farmerFSM
+        let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
+        let farmerStep = this.farmerFSM.step();
 
-        //process current step within the turnipFSM
-        this.turnipFSM.step();
+        if(turnipStep == "steal") { //update the text
+            this.cropsText.text = "crops: " + this.stats.crops;
+        }
+        if(turnipStep == "burrow") { //update the text
+            this.scoreText.text = `reputation ` + this.stats.score;
+            this.cropsText.text = "crops: " + this.stats.crops;
 
-        //TODO: reorganize this logic to work with turnip interacting with specific tiles
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Mkey)) {
-            this.crops++;
-            this.cropsText.text = "c:" + this.crops;
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Nkey)) {
-            this.score += this.crops;
-            this.crops = 0;
-            this.cropsText.text = "c:" + this.crops;
-            this.scoreText.text = "s:" + this.score;
-        }
+        //TODO: remove B button when win/loss condition is working
         if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
             this.scene.start("menuScene");
         }
@@ -149,6 +182,7 @@ class Play extends Phaser.Scene {
     createAudio() {
         this.audios  = {};
         this.audios.running = this.sound.add('running', { loop: true });
+        this.audios.harvest = this.sound.add('harvest', {volume: 0.5});
     }
 
     
