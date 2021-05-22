@@ -30,3 +30,5 @@ let config = {
     scene: [Load, Menu, Play],
 }
 let game = new Phaser.Game(config);
+
+const TILE_SIZE = 32;

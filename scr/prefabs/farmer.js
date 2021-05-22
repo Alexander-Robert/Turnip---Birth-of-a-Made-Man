@@ -12,12 +12,15 @@ class Farmer extends Phaser.GameObjects.PathFollower {
 }
 //inherits from State; Acts as an abstract class to define properties and methods common among all subclasses
 class FarmerState extends State {
-    constructor(scene) {
+    constructor(scene, farmer) {
         //subclass constructors require that you call the super constructor:
         //https://stackoverflow.com/questions/31067368/how-to-extend-a-class-without-having-to-use-super-in-es6
         super();
         this.graphics = scene.add.graphics();
         this.graphics.lineStyle(2, 0xFFFFFF, 0.75);
+        this.oldX = farmer.x;
+        this.oldY = farmer.y;
+        this.oldDirection = farmer.direction;
     }
 
     enter(scene, farmer) { //TODO: define any extra parameters needed
@@ -30,11 +33,115 @@ class FarmerState extends State {
         //subclasses will call super.execute(scene, farmer, ...args); to use the common behaviors
     }
 
+    findDirection(farmer) {
+        let newX = farmer.x;
+        let newY = farmer.y;
+
+        let defaultAngle = Math.round(-1 * Math.atan2(newY - this.oldY, newX - this.oldX) * (180 / Math.PI));
+        let angle = defaultAngle;
+        if (angle < 0)
+            angle += 360;
+        if (angle <= 10 || angle > 350)
+            farmer.direction = 'right';
+        else if (angle <= 80 && angle > 10)
+            farmer.direction = 'up+right';
+        else if (angle <= 100 && angle > 80)
+            farmer.direction = 'up';
+        else if (angle <= 170 && angle > 100)
+            farmer.direction = 'up+left';
+        else if (angle <= 190 && angle > 170)
+            farmer.direction = 'left';
+        else if (angle <= 260 && angle > 190)
+            farmer.direction = 'down+left';
+        else if (angle <= 280 && angle > 260)
+            farmer.direction = 'down';
+        else if (angle <= 350 && angle > 280)
+            farmer.direction = 'down+right';
+
+        this.oldX = newX;
+        this.oldY = newY;
+
+        return Math.round(defaultAngle);
+    }
+
+    updateDirection(farmer) {
+        if (this.oldDirection != farmer.direction) {
+            this.oldDirection = farmer.direction;
+            return true;
+        }
+        return false;
+    }
+
     //checks anything that would alert the farmer 
     //(i.e. farmer within range of turnip and sees turnip or farmer hears noise)
     //turnip causes noise by: stealing crops, running through crops, jumping in holes
-    checkAlerts(scene, farmer, audio, turnip, noise) {
-
+    checkAlerts(scene, farmer, turnip, noise) {
+        let farmerAngle;
+        //if the farmer is not moving, check if they can see turnip from their current direction
+        if (!farmer.isFollowing()) {
+            switch (farmer.direction) {
+                case 'up':
+                    farmerAngle = 90;
+                    break;
+                case 'down':
+                    farmerAngle = -90;
+                    break;
+                case 'left':
+                    farmerAngle = 180;
+                    break;
+                case 'right':
+                    farmerAngle = 0;
+                    break;
+                case 'up+left':
+                    farmerAngle = 135;
+                    break;
+                case 'up+right':
+                    farmerAngle = 45;
+                    break;
+                case 'down+left':
+                    farmerAngle = -135;
+                    break;
+                case 'down+right':
+                    farmerAngle = -45;
+                    break;
+                default:
+                    console.warn(`found direction: ${farmer.direction} not listed`);
+                    break;
+            }
+        }
+        else //otherwise we need to find the new direction 
+            farmerAngle = this.findDirection(farmer);
+        this.updateDirection(farmer);
+        let farmerToTurnipAngle = Math.round(-1 * Math.atan2(turnip.y - farmer.y, turnip.x - farmer.x) * (180 / Math.PI));
+        let facing = Math.round(Math.abs(Math.abs(farmerAngle) - Math.abs(farmerToTurnipAngle)));
+        let distance = Phaser.Math.Distance.Between(farmer.x, farmer.y, turnip.x, turnip.y);
+        if (facing < 35 && distance < 200){
+            return "sees turnip";
+            // console.log("farmer sees player");
+        }
+        
+        //otherwise, see if the farmer heard something
+        if(noise[0] != "none"){
+            //console.log(noise);
+            switch(noise[0]){
+                case "running":
+                    if (distance < 200)
+                        return "hears turnip";
+                    break;
+                case "stealing":
+                    if (distance < 350)
+                        return "hears turnip";
+                    break;
+                case "burrowing":
+                    if (distance < 275)
+                        return "hears turnip";
+                    break;
+                default:
+                    console.warn(`noise: ${noise[0]} not recognized`)
+                    break;
+            }
+        }
+        return "none";
     }
 }
 
@@ -42,10 +149,10 @@ class FarmerState extends State {
 
 //stop moving, look for turnip in the direction of noise or if in line of sight
 class SearchState extends FarmerState {
-    constructor(scene) { super(scene); } //pass the scene into FarmerState to define the keys, methods, etc.
+    constructor(scene, farmer) { super(scene, farmer); }
 
     enter(scene, farmer) {
-        farmer.body.setVelocity(0); //stop farmer
+        //farmer.body.setVelocity(0); //stop farmer
 
         //play the stop (reset farmer to be a static idle image instead of an animation) 
         //farmer.anims.play(`walk-${farmer.direction}`);
@@ -53,6 +160,7 @@ class SearchState extends FarmerState {
     }
 
     execute(scene, farmer, audio, turnip, noise) { //similar to check alerts but checks in more detail
+        super.checkAlerts(scene, farmer, turnip, noise);
         //if(distance (farmer, turnip) < 100)
         //create path from farmer to turnip
         //transition to chase state (pass it the initial path to follow)
@@ -62,11 +170,12 @@ class SearchState extends FarmerState {
 //follow direct path between farmer and turnip
 //if turnip goes out of view, stop at the last place seen and search
 class ChaseState extends FarmerState {
-    constructor(scene) { super(scene); } //pass the scene into FarmerState to define the keys, methods, etc.
+    constructor(scene, farmer) { super(scene, farmer); }
 
     enter(scene, farmer, audios) {
     }
-    execute(scene, farmer, audios) {
+    execute(scene, farmer, audio, turnip, noise) {
+        super.checkAlerts(scene, farmer, turnip, noise);
         //update path from farmer to turnip
         //if(path < some max distance)
         //if(no obstacle is blocking path between farmer and turnip)
@@ -88,13 +197,13 @@ class ChaseState extends FarmerState {
 
 //go to hole tile and bury it.
 class BuryState extends FarmerState {
-    constructor(scene) { super(scene); }
+    constructor(scene, farmer) { super(scene, farmer); }
 
     enter(scene, farmer, audios, path) {
         //follow given path
     }
 
-    execute(scene, farmer, audios, path) {
+    execute(scene, farmer, audio, turnip, noise) {
         //on path complete
         //replace hole tile with buried hole tile
         //somehow remove the hole tile from usable holes
@@ -107,13 +216,13 @@ class BuryState extends FarmerState {
 //TODO: see if the farmer should be altered in this state or not 
 //(could be a mechanic to allow the player move close by the farmer while they're busy watering)
 class WaterState extends FarmerState {
-    constructor(scene) { super(scene); }
+    constructor(scene, farmer) { super(scene, farmer); }
 
     enter(scene, farmer, audios) {
         //play a watering animation
     }
 
-    execute(scene, farmer, audios, path) {
+    execute(scene, farmer, audio, turnip, noise) {
         //on animation complete
         //transition back to walk state (given the current path)
     }
@@ -123,8 +232,8 @@ class WaterState extends FarmerState {
 //chooses a random path in subset of paths to follow
 //on path complete, follows a different random path
 class WalkState extends FarmerState {
-    constructor(scene, map, farmer) {
-        super(scene);
+    constructor(scene, farmer, map) {
+        super(scene, farmer);
         this.paths = []; //array of different paths
         this.createPaths(scene, map);
         farmer.setPath(this.paths[0]);
@@ -142,7 +251,7 @@ class WalkState extends FarmerState {
             delay: 0,
             //TODO: replace duration's number with binding calculated by the path's length
             //to have the farmer walk at the same speed reguardless of the path's length
-            duration: 10000,
+            duration: 5000,
             ease: 'Power0',
             hold: 0,
             repeat: 0,
@@ -200,7 +309,7 @@ class WalkState extends FarmerState {
         farmer.startFollow(this.pathConfig);
     }
 
-    execute(scene, farmer, audios) {
+    execute(scene, farmer, audios, turnip, noise) {
         //if(super.checkAlerts()) //if the farmer has been altered in some manner
         //transition to search state
         //if farmer is on top of a crop
@@ -208,7 +317,20 @@ class WalkState extends FarmerState {
         //if success, transition to water state (pass it the current path)
         //on path complete
         //transition to walk state again (passing the current path) (AKA: finds a new path)
-
+        
+        let alert = super.checkAlerts(scene, farmer, turnip, noise);
+        if (alert != "none") {
+            if (alert == "sees turnip"){
+                this.stateMachine.transition("chase");
+                return;
+            }
+            else if (alert == "hears turnip"){
+                this.stateMachine.transition("search");
+                return;
+            }
+            else
+                console.warn(`alert ${alert} unknown`);
+        }
         if (!farmer.isFollowing()) {
             //used a delayed call because of update issue calling this before enter method completes
             scene.time.delayedCall(100, () => {
