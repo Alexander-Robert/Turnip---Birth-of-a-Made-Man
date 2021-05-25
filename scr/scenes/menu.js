@@ -20,14 +20,14 @@ class Menu extends Phaser.Scene {
         }
 
         //TODO: change this to be clickable button.
-        this.scoreText = this.add.text(1280/2,736/2, "Press B to start", textConfig);
-        this.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
+        this.scoreText = this.add.text(1280/2,736/2, "Press Space to start", textConfig);
+        this.SPACEKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         
     }
 
     update() {
-        if (Phaser.Input.Keyboard.JustDown(this.Bkey)) {
+        if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
             this.scene.start("playScene");
         }
     }

@@ -21,6 +21,25 @@ class FarmerState extends State {
         this.oldX = farmer.x;
         this.oldY = farmer.y;
         this.oldDirection = farmer.direction;
+
+        // create the pathConfig defining details for the farmer following paths
+        // note: you can mix properties from both types of config objects
+        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.Tweens.html#.NumberTweenBuilderConfig
+        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.GameObjects.PathFollower.html#.PathConfig
+        this.pathConfig = {
+            startAt: 0,
+            from: 0,            // points allow a path are values 0–1
+            to: 1,
+            delay: 0,
+            //TODO: replace duration's number with binding calculated by the path's length
+            //to have the farmer walk at the same speed reguardless of the path's length
+            duration: 5000,
+            ease: 'Power0',
+            hold: 0,
+            repeat: 0,
+            yoyo: false,
+            rotateToPath: false
+        };
     }
 
     enter(scene, farmer) { //TODO: define any extra parameters needed
@@ -149,9 +168,25 @@ class FarmerState extends State {
 
 //stop moving, look for turnip in the direction of noise or if in line of sight
 class SearchState extends FarmerState {
-    constructor(scene, farmer) { super(scene, farmer); }
+    constructor(scene, farmer) { 
+        super(scene, farmer); 
+        this.path;
+    }
 
-    enter(scene, farmer) {
+    enter(scene, farmer, audios, turnip) {
+        farmer.stopFollow();
+        let locationX = turnip.x;
+        let locationY = turnip.y;
+        //TODO: create a question mark above farmer's head 
+        scene.time.delayedCall(2000, () => {
+            this.path = scene.add.path(farmer.x, farmer.y)
+            this.path.lineTo(locationX, locationY);
+            farmer.setPath(this.path);
+            //this.path.draw(this.graphics);
+            //TODO: check for obstacles in the way and create a path around them
+            farmer.startFollow(this.pathConfig);
+        }, null, this);
+
         //farmer.body.setVelocity(0); //stop farmer
 
         //play the stop (reset farmer to be a static idle image instead of an animation) 
@@ -160,7 +195,31 @@ class SearchState extends FarmerState {
     }
 
     execute(scene, farmer, audio, turnip, noise) { //similar to check alerts but checks in more detail
-        super.checkAlerts(scene, farmer, turnip, noise);
+        let alert = super.checkAlerts(scene, farmer, turnip, noise);
+        if (alert != "none") {
+            scene.time.removeAllEvents();
+            if (alert == "sees turnip"){
+                this.stateMachine.transition("chase");
+                return;
+            }
+            else if (alert == "hears turnip"){
+                this.stateMachine.transition("search");
+                return;
+            }
+            else
+                console.warn(`alert ${alert} unknown`);
+        }
+        if (!farmer.isFollowing()) {
+            //after a little bit of not finding anything, go back to the normal walking routes
+            
+            scene.time.delayedCall(4000, () => {
+                if (!farmer.isFollowing()) {
+                    scene.time.removeAllEvents();
+                    this.stateMachine.transition("findPath");
+                    return;
+                }
+            }, null, this);
+        }
         //if(distance (farmer, turnip) < 100)
         //create path from farmer to turnip
         //transition to chase state (pass it the initial path to follow)
@@ -170,12 +229,27 @@ class SearchState extends FarmerState {
 //follow direct path between farmer and turnip
 //if turnip goes out of view, stop at the last place seen and search
 class ChaseState extends FarmerState {
-    constructor(scene, farmer) { super(scene, farmer); }
+    constructor(scene, farmer) { 
+        super(scene, farmer);
+        this.pathConfig.duration = 2000;
+    }
 
-    enter(scene, farmer, audios) {
+    enter(scene, farmer, audios, turnip, timeDelay) {
+        farmer.stopFollow();
+        let locationX = turnip.x;
+        let locationY = turnip.y;
+        //TODO: create an exclamation point above farmer's head
+        let delay = (timeDelay !== undefined) ? timeDelay : 500;
+        scene.time.delayedCall(delay, () => {
+            this.path = scene.add.path(farmer.x, farmer.y)
+            this.path.lineTo(locationX, locationY);
+            farmer.setPath(this.path);
+            //this.path.draw(this.graphics);
+            //TODO: check for obstacles in the way and create a path around them
+            farmer.startFollow(this.pathConfig);
+        }, null, this);
     }
     execute(scene, farmer, audio, turnip, noise) {
-        super.checkAlerts(scene, farmer, turnip, noise);
         //update path from farmer to turnip
         //if(path < some max distance)
         //if(no obstacle is blocking path between farmer and turnip)
@@ -187,6 +261,32 @@ class ChaseState extends FarmerState {
         //create path to point past object and follow to that point.
         //if (follow path complete)
         //transition to search state
+
+        let alert = super.checkAlerts(scene, farmer, turnip, noise);
+        if (alert == "sees turnip") {
+            if (!farmer.isFollowing()) {
+                //if the farmer sees turnip and finished following to his last location
+                //keep chasing him
+                scene.time.delayedCall(100, () => {
+                    if (!farmer.isFollowing()) {
+                        scene.time.removeAllEvents();
+                        this.stateMachine.transition("chase", 1);
+                        return;
+                    }
+                }, null, this);
+            }
+        }
+        if (!farmer.isFollowing()) {
+            //after a little bit of not finding anything, go back to the normal walking routes
+            
+            scene.time.delayedCall(4000, () => {
+                if (!farmer.isFollowing()) {
+                    scene.time.removeAllEvents();
+                    this.stateMachine.transition("findPath");
+                    return;
+                }
+            }, null, this);
+        }
 
         // handle animation
         //farmer.anims.play(`walk-${farmer.direction}`, true);
@@ -228,36 +328,115 @@ class WaterState extends FarmerState {
     }
 }
 
-//walk around the farm
-//chooses a random path in subset of paths to follow
-//on path complete, follows a different random path
-class WalkState extends FarmerState {
+class pathState extends FarmerState {
     constructor(scene, farmer, map) {
         super(scene, farmer);
         this.paths = []; //array of different paths
         this.createPaths(scene, map);
+    }
+
+    createPaths(scene, map) {
+        //create all paths from paths object layer in the tilemap
+        for (let i = 1; ; i++) {
+            //find each path start
+            let pathStart = map.findObject("paths", obj => obj.name === ("p" + i + "start"));
+            if (pathStart != null) { //if the path point was found
+                //add it to the path object
+                let path = scene.add.path(pathStart.x, pathStart.y);
+                for (let j = 1; ; j++) {
+                    //for every point on that path, add a line to each point in order
+                    let pathPoint = map.findObject("paths", obj => obj.name === ("p" + i + "point" + j));
+                    if (pathPoint != null) //if the next path point was found
+                        path.lineTo(pathPoint.x, pathPoint.y);
+                    else
+                        break;
+                }
+                path.draw(this.graphics);
+                //enter the path into the paths array
+                this.paths.push(path);
+                //copy the reverse of the path (creates bidirectional pathing for farmer's passive walking routes)
+                let reverseArray = path.getPoints().reverse();
+                // reverseArray.reverse();
+                let reversePath = null;
+                for (let point of reverseArray) {
+                    if (reversePath == null)
+                        reversePath = scene.add.path(reverseArray[0].x, reverseArray[0].y);
+                    else
+                        reversePath.lineTo(point.x, point.y);
+                }
+                this.paths.push(reversePath);
+            }
+            else
+                break; //couldn't find another path to create
+        }
+
+        //for let loop uses destructuring to get both the element and index of the array
+        //https://flaviocopes.com/how-to-get-index-in-for-of-loop/
+        for (let [index, path] of this.paths.entries()) {
+            path.name = "p" + index; //give each path a name to check in pathfinding
+        }
+    }
+}
+
+//finds the closest path near the farmer
+//and has the farmer return to the start of that path again
+class findPathState extends pathState {
+    constructor(scene, farmer, map) {
+        super(scene, farmer, map);
+        this.closestPath = null;
+    }
+    enter(scene, farmer, audios, turnip) {
+        let minDist = 100000000;
+        for(let path of this.paths) {
+            let pathStart = path.getStartPoint();
+            let distance = Phaser.Math.Distance.Between(farmer.x, farmer.y, pathStart.x, pathStart.y);
+            if(distance < minDist) {
+                minDist = distance;
+                this.closestPath = path;
+            }
+        }
+        let tempPath = scene.add.path(farmer.x,farmer.y);
+        tempPath.lineTo(this.closestPath.getStartPoint().x, this.closestPath.getStartPoint().y);
+        farmer.setPath(tempPath);
+        farmer.startFollow(this.pathConfig);
+    }
+    execute(scene, farmer, audios, turnip, noise) {
+        let alert = super.checkAlerts(scene, farmer, turnip, noise);
+        if (alert != "none") {
+            scene.time.removeAllEvents();
+            if (alert == "sees turnip"){
+                this.stateMachine.transition("chase");
+                return;
+            }
+            else if (alert == "hears turnip"){
+                this.stateMachine.transition("search");
+                return;
+            }
+            else
+                console.warn(`alert ${alert} unknown`);
+        }
+        if (!farmer.isFollowing()) {
+            //used a delayed call because of update issue calling this before enter method completes
+            scene.time.delayedCall(1000, () => {
+                if (!farmer.isFollowing()) {
+                    scene.time.removeAllEvents();
+                    this.stateMachine.transition("walk", this.closestPath.name);
+                    return;
+                }
+            }, null, this);
+        }
+    }
+}
+
+//walk around the farm
+//chooses a random path in subset of paths to follow
+//on path complete, follows a different random path
+class WalkState extends pathState {
+    constructor(scene, farmer, map) {
+        super(scene, farmer, map);
         farmer.setPath(this.paths[0]);
         let startPoint = this.paths[0].getStartPoint();
         farmer.setPosition(startPoint.x, startPoint.y);
-
-        // create the pathConfig defining details for the farmer following paths
-        // note: you can mix properties from both types of config objects
-        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.Tweens.html#.NumberTweenBuilderConfig
-        // https://photonstorm.github.io/phaser3-docs/Phaser.Types.GameObjects.PathFollower.html#.PathConfig
-        this.pathConfig = {
-            startAt: 0,
-            from: 0,            // points allow a path are values 0–1
-            to: 1,
-            delay: 0,
-            //TODO: replace duration's number with binding calculated by the path's length
-            //to have the farmer walk at the same speed reguardless of the path's length
-            duration: 5000,
-            ease: 'Power0',
-            hold: 0,
-            repeat: 0,
-            yoyo: false,
-            rotateToPath: false
-        };
     }
 
     enter(scene, farmer, audios, turnip, pathName, wateredPlant) {
@@ -320,6 +499,7 @@ class WalkState extends FarmerState {
         
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
         if (alert != "none") {
+            scene.time.removeAllEvents();
             if (alert == "sees turnip"){
                 this.stateMachine.transition("chase");
                 return;
@@ -335,51 +515,11 @@ class WalkState extends FarmerState {
             //used a delayed call because of update issue calling this before enter method completes
             scene.time.delayedCall(100, () => {
                 if (!farmer.isFollowing()) {
+                    scene.time.removeAllEvents();
                     this.stateMachine.transition("walk", farmer.path.name);
+                    return;
                 }
             }, null, this);
-        }
-    }
-
-    createPaths(scene, map) {
-        //create all paths from paths object layer in the tilemap
-        for (let i = 1; ; i++) {
-            //find each path start
-            let pathStart = map.findObject("paths", obj => obj.name === ("p" + i + "start"));
-            if (pathStart != null) { //if the path point was found
-                //add it to the path object
-                let path = scene.add.path(pathStart.x, pathStart.y);
-                for (let j = 1; ; j++) {
-                    //for every point on that path, add a line to each point in order
-                    let pathPoint = map.findObject("paths", obj => obj.name === ("p" + i + "point" + j));
-                    if (pathPoint != null) //if the next path point was found
-                        path.lineTo(pathPoint.x, pathPoint.y);
-                    else
-                        break;
-                }
-                path.draw(this.graphics);
-                //enter the path into the paths array
-                this.paths.push(path);
-                //copy the reverse of the path (creates bidirectional pathing for farmer's passive walking routes)
-                let reverseArray = path.getPoints().reverse();
-                // reverseArray.reverse();
-                let reversePath = null;
-                for (let point of reverseArray) {
-                    if (reversePath == null)
-                        reversePath = scene.add.path(reverseArray[0].x, reverseArray[0].y);
-                    else
-                        reversePath.lineTo(point.x, point.y);
-                }
-                this.paths.push(reversePath);
-            }
-            else
-                break; //couldn't find another path to create
-        }
-
-        //for let loop uses destructuring to get both the element and index of the array
-        //https://flaviocopes.com/how-to-get-index-in-for-of-loop/
-        for (let [index, path] of this.paths.entries()) {
-            path.name = "p" + index; //give each path a name to check in pathfinding
         }
     }
 }

@@ -151,20 +151,29 @@ class Play extends Phaser.Scene {
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this, this.farmer),
             chase: new ChaseState(this, this.farmer),
-            //TODO: create a findPathState to create a path 
-            //for the farmer to follow to get back to it's normal walk state path routes
+            findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
             water: new WaterState(this, this.farmer),
             bury: new BuryState(this, this.farmer),
         }, [this, this.farmer, this.audios, this.turnip]);
+
+        //TODO: remove when farmer AI is complete
+        //checker for printing states whenever the state changes
+        this.savedState = 'walk';
     }
 
     update() {
         //process current step within the turnipFSM and farmerFSM
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
+        
         //TODO: can use farmer's info to see what type of crop he's closest to
         //allows for pescotti to reward more points for stealing crops close to the farmer
+        let currentState = this.farmerFSM.getState();
+        if (this.savedState != currentState){
+            console.log(currentState);
+            this.savedState = currentState;
+        }
 
         if(turnipStep == "steal") { //update the text
             this.cropsText.text = "crops: " + this.stats.crops;
