@@ -184,6 +184,8 @@ class SearchState extends FarmerState {
             farmer.setPath(this.path);
             //this.path.draw(this.graphics);
             //TODO: check for obstacles in the way and create a path around them
+            this.pathConfig.duration = ((3000));
+            //console.log(this.pathConfig.duration);
             farmer.startFollow(this.pathConfig);
         }, null, this);
 
@@ -246,6 +248,8 @@ class ChaseState extends FarmerState {
             farmer.setPath(this.path);
             //this.path.draw(this.graphics);
             //TODO: check for obstacles in the way and create a path around them
+            this.pathConfig.duration = ((1500));
+            //console.log(this.pathConfig.duration);
             farmer.startFollow(this.pathConfig);
         }, null, this);
     }
@@ -398,6 +402,8 @@ class findPathState extends pathState {
         let tempPath = scene.add.path(farmer.x,farmer.y);
         tempPath.lineTo(this.closestPath.getStartPoint().x, this.closestPath.getStartPoint().y);
         farmer.setPath(tempPath);
+        this.pathConfig.duration = ((4000));
+        //console.log(this.pathConfig.duration);
         farmer.startFollow(this.pathConfig);
     }
     execute(scene, farmer, audios, turnip, noise) {
@@ -485,6 +491,8 @@ class WalkState extends pathState {
             let startPoint = possiblePaths[randomIndex].getStartPoint();
             farmer.setPosition(startPoint.x, startPoint.y);
         }
+        this.pathConfig.duration = ((5000));
+        //console.log(this.pathConfig.duration);
         farmer.startFollow(this.pathConfig);
     }
 

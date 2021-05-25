@@ -32,7 +32,7 @@ class Play extends Phaser.Scene {
         this.pathsLayer = field.createLayer("paths", object_tileset, 0 ,0);
 
         //create our player character
-        this.turnip = new Turnip(this, 400, 100, "turnip", 0, 'down').setScale(0.25);
+        this.turnip = new Turnip(this, 800, 500, "turnip", 0, 'down').setScale(0.25);
 
         //create out farmer AI (defined as a path follower which extends sprites)
         let emptyPath = this.add.path();
