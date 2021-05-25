@@ -32,7 +32,7 @@ class Play extends Phaser.Scene {
         this.pathsLayer = field.createLayer("paths", object_tileset, 0 ,0);
 
         //create our player character
-        this.turnip = new Turnip(this, 400, 100, "turnip", 0, 'down').setScale(0.25);
+        this.turnip = new Turnip(this, 800, 500, "turnip", 0, 'down').setScale(0.25);
 
         //create out farmer AI (defined as a path follower which extends sprites)
         let emptyPath = this.add.path();
@@ -141,7 +141,7 @@ class Play extends Phaser.Scene {
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
             idle: new IdleState(this),
-            move: new MoveState(this),
+            move: new MoveState(this, this.turnip),
             //TODO: make steal and burrow state spawn/delete crops in bag UI respectively. 
             steal: new StealState(this, this.stats), 
             burrow: new BurrowState(this, this.stats, this.holes),
@@ -149,20 +149,31 @@ class Play extends Phaser.Scene {
 
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {
-            search: new SearchState(this),
-            chase: new ChaseState(this),
-            //TODO: create a findPathState to create a path 
-            //for the farmer to follow to get back to it's normal walk state path routes
-            walk: new WalkState(this, field, this.farmer),
-            water: new WaterState(this),
-            bury: new BuryState(this),
+            search: new SearchState(this, this.farmer),
+            chase: new ChaseState(this, this.farmer),
+            findPath: new findPathState(this, this.farmer, field),
+            walk: new WalkState(this, this.farmer, field),
+            water: new WaterState(this, this.farmer),
+            bury: new BuryState(this, this.farmer),
         }, [this, this.farmer, this.audios, this.turnip]);
+
+        //TODO: remove when farmer AI is complete
+        //checker for printing states whenever the state changes
+        this.savedState = 'walk';
     }
 
     update() {
         //process current step within the turnipFSM and farmerFSM
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
-        let farmerStep = this.farmerFSM.step();
+        let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
+        
+        //TODO: can use farmer's info to see what type of crop he's closest to
+        //allows for pescotti to reward more points for stealing crops close to the farmer
+        let currentState = this.farmerFSM.getState();
+        if (this.savedState != currentState){
+            console.log(currentState);
+            this.savedState = currentState;
+        }
 
         if(turnipStep == "steal") { //update the text
             this.cropsText.text = "crops: " + this.stats.crops;

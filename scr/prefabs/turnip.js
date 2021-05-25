@@ -111,9 +111,10 @@ class IdleState extends TurnipState {
 
     enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
+        this.stateMachine.setInfo("none");
         //play the stop (reset turnip to be a static idle image instead of an animation) 
         //turnip.anims.play(`walk-${turnip.direction}`);
-        //turnip.anims.stop(); 
+        //turnip.anims.stop();
     }
 
     execute(scene, turnip, audios, field) {
@@ -165,6 +166,11 @@ class MoveState extends TurnipState {
             }
         }
 
+        //if turnip is running on crops
+        if(super.checkTileType(scene, turnip, field).name == "crop"){
+            this.stateMachine.setInfo("running");
+        }
+
         //if NONE of the move keys were pressed
         if (!(this.A.isDown || this.D.isDown || this.W.isDown || this.S.isDown)) {
             this.stateMachine.transition('idle');
@@ -181,7 +187,7 @@ class MoveState extends TurnipState {
             turnip.body.setVelocityY(turnip.velocity);
             turnip.direction = 'down';
         }
-        if (this.A.isDown) { //Left is pressed
+        else if (this.A.isDown) { //Left is pressed
             turnip.body.setVelocityX(-turnip.velocity);
             turnip.direction = 'left';
         } else if (this.D.isDown) { //Right is pressed
@@ -208,6 +214,7 @@ class StealState extends TurnipState {
         this.tileInfo = tileInfo;
         //play stealing animation
         audios.harvest.play();
+        this.stateMachine.setInfo("stealing");
     }
 
     execute(scene, turnip, audios, field) {
@@ -229,12 +236,12 @@ class BurrowState extends TurnipState {
         this.turnipUI.velocity = 150;
         this.turnipUI.alpha = 0;
         this.stats = stats;
-        console.log(this.stats);
         this.holes = holes;
     }
 
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
+        this.stateMachine.setInfo("burrowing");
         //play burrow animation
         //on animation complete
         //make turnip invisible
@@ -250,6 +257,7 @@ class BurrowState extends TurnipState {
     }
 
     execute(scene, turnip, audios, field) {
+        this.stateMachine.setInfo("none");
         if ((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
             turnip.body.setVelocity(0);
         //check for transitions
@@ -301,7 +309,6 @@ class BurrowState extends TurnipState {
         //delete the separate sprite in the shop UI that player controls
         //play an exit burrow animation
         //make turnip visible again
-
         turnip.alpha = 1;
 
         this.turnipUI.body.setVelocityX(0);
