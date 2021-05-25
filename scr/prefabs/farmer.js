@@ -173,12 +173,13 @@ class SearchState extends FarmerState {
         this.path;
     }
 
-    enter(scene, farmer, audios, turnip) {
+    enter(scene, farmer, audios, turnip, timeDelay) {
         farmer.stopFollow();
         let locationX = turnip.x;
         let locationY = turnip.y;
-        //TODO: create a question mark above farmer's head 
-        scene.time.delayedCall(2000, () => {
+        //TODO: create a question mark above farmer's head
+        let delay = (timeDelay !== undefined) ? timeDelay : 2000;
+        scene.time.delayedCall(delay, () => {
             this.path = scene.add.path(farmer.x, farmer.y)
             this.path.lineTo(locationX, locationY);
             farmer.setPath(this.path);
@@ -267,17 +268,32 @@ class ChaseState extends FarmerState {
         //transition to search state
 
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
-        if (alert == "sees turnip") {
-            if (!farmer.isFollowing()) {
-                //if the farmer sees turnip and finished following to his last location
-                //keep chasing him
-                scene.time.delayedCall(100, () => {
-                    if (!farmer.isFollowing()) {
-                        scene.time.removeAllEvents();
-                        this.stateMachine.transition("chase", 1);
-                        return;
-                    }
-                }, null, this);
+        if (alert != "none") {
+            if (alert == "sees turnip") {
+                if (!farmer.isFollowing()) {
+                    //if the farmer sees turnip and finished following to his last location
+                    //keep chasing him
+                    scene.time.delayedCall(100, () => {
+                        if (!farmer.isFollowing()) {
+                            scene.time.removeAllEvents();
+                            this.stateMachine.transition("chase", 1);
+                            return;
+                        }
+                    }, null, this);
+                }
+            }
+            if (alert == "hears turnip") {
+                if (!farmer.isFollowing()) {
+                    //if the farmer sees turnip and finished following to his last location
+                    //keep chasing him
+                    scene.time.delayedCall(100, () => {
+                        if (!farmer.isFollowing()) {
+                            scene.time.removeAllEvents();
+                            this.stateMachine.transition("chase", 500);
+                            return;
+                        }
+                    }, null, this);
+                }
             }
         }
         if (!farmer.isFollowing()) {
