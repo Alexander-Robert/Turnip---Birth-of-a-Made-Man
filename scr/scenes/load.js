@@ -14,6 +14,7 @@ class Load extends Phaser.Scene {
         this.load.image("field_set", "tileset.png");
         this.load.audio("running", "running.wav");
         this.load.audio("harvest", "rustle.ogg");
+        this.load.audio("dig", "dig.wav");
         this.load.spritesheet("object_set", "objects.png", {
             frameWidth: 32,
             frameHeight: 32

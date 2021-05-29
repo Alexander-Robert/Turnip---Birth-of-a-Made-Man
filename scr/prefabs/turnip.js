@@ -242,6 +242,7 @@ class BurrowState extends TurnipState {
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
         this.stateMachine.setInfo("burrowing");
+        audios.dig.play();
         //play burrow animation
         //on animation complete
         //make turnip invisible
@@ -309,6 +310,7 @@ class BurrowState extends TurnipState {
         //delete the separate sprite in the shop UI that player controls
         //play an exit burrow animation
         //make turnip visible again
+        audios.dig.play();
         turnip.alpha = 1;
 
         this.turnipUI.body.setVelocityX(0);
