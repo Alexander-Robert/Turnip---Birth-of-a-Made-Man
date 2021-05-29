@@ -110,9 +110,6 @@ class Play extends Phaser.Scene {
         this.minimap.ignore(this.tower);
         this.minimap.ignore(this.pescotti);
 
-        //temp keys for testing stats //TODO: remove when you've created win/lose condition
-        this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
-
         //define stats
         this.stats = {};
         this.stats.score = 0;
@@ -176,15 +173,24 @@ class Play extends Phaser.Scene {
         }
 
         if(turnipStep == "steal") { //update the text
-            this.cropsText.text = "crops: " + this.stats.crops;
+            this.cropsText.text = "crops:" + this.stats.crops;
         }
         if(turnipStep == "burrow") { //update the text
             this.scoreText.text = `reputation ` + this.stats.score;
-            this.cropsText.text = "crops: " + this.stats.crops;
+            this.cropsText.text = "crops:" + this.stats.crops;
 
         }
-        //TODO: remove B button when win/loss condition is working
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
+
+        //check lose conditions: (farmer and turnip collision or all holes covered)
+        let loseCondition = true;
+        for(let hole of this.holes) {
+            if (hole.sprite.covered != true)
+                loseCondition = false;
+        }
+        //TODO: replace menuScene transition to gameOverScene transition 
+        //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
+        //can also: restart game or back to main menu)
+        if(loseCondition) {
             this.scene.start("menuScene");
         }
     }

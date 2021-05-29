@@ -236,7 +236,7 @@ class BurrowState extends TurnipState {
         super(scene);
         this.turnipUI = scene.physics.add.sprite(800, 800, 'turnip').setSize(0.75);
         this.turnipUI.setScrollFactor(0);
-        this.turnipUI.velocity = 150;
+        this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
         this.stats = stats;
         this.holes = holes;
