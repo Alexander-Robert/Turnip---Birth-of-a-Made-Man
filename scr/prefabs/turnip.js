@@ -98,8 +98,8 @@ class TurnipState extends State {
             case 8:
                 return { tile: tile, name: "hole" };
             default:
-                console.warn("found some other tile not listed");
-                console.log(tile);
+                // console.warn("found some other tile not listed");
+                // console.log(tile);
                 return { tile: tile, name: "other" };
         }
     }
@@ -244,7 +244,6 @@ class BurrowState extends TurnipState {
 
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
-        this.stateMachine.setInfo("burrowing");
         //play burrow animation
         //on animation complete
         //make turnip invisible
@@ -252,6 +251,7 @@ class BurrowState extends TurnipState {
         //create a separate sprite in the shop UI that player controls
         //play an entrance animation to the shop UI
         this.holeIndex = this.findHole(tile);
+        this.stateMachine.setInfo("burrowing", this.holes[this.holeIndex]);
         turnip.setPosition(-1000, -1000); //put turnip off the map
         turnip.alpha = 0;
         this.turnipUI.x = this.holes[this.holeIndex].sprite.x;
@@ -269,11 +269,13 @@ class BurrowState extends TurnipState {
             for(let hole of this.holes){
                 //TODO, if multiple holes are overlapping check which is closer to turnip and select that one.
                 // console.log(this.checkOverlap(this.turnipUI, hole.sprite));
-                if(this.checkOverlap(this.turnipUI, hole.sprite)){
-                    turnip.setPosition(
-                        field.tileToWorldX(hole.location.x),
-                        field.tileToWorldY(hole.location.y));
-                        this.stateMachine.transition('idle');
+                if(hole.sprite.covered != true) {
+                    if(this.checkOverlap(this.turnipUI, hole.sprite)){
+                        turnip.setPosition(
+                            field.tileToWorldX(hole.location.x),
+                            field.tileToWorldY(hole.location.y));
+                            this.stateMachine.transition('idle');
+                    }
                 }
             }
             if ((this.turnipUI.body.position.x < 250)){

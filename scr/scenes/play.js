@@ -154,7 +154,7 @@ class Play extends Phaser.Scene {
             findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
             water: new WaterState(this, this.farmer),
-            bury: new BuryState(this, this.farmer),
+            bury: new BuryState(this, this.farmer, field),
         }, [this, this.farmer, this.audios, this.turnip]);
 
         //TODO: remove when farmer AI is complete

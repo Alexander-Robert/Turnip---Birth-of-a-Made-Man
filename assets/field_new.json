@@ -403,15 +403,15 @@
          "tilewidth":32
         }, 
         {
-         "columns":3,
+         "columns":4,
          "firstgid":6,
          "image":"objects.png",
          "imageheight":33,
-         "imagewidth":97,
+         "imagewidth":129,
          "margin":0,
          "name":"object_set",
          "spacing":0,
-         "tilecount":3,
+         "tilecount":4,
          "tileheight":32,
          "tilewidth":32,
          "transparentcolor":"#000000"

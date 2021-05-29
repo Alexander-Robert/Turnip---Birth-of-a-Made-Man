@@ -322,6 +322,14 @@ class ChaseState extends FarmerState {
         }, null, this);
     }
     execute(scene, farmer, audio, turnip, noise) {
+        //outside of alert checking because 
+        //if we're in the chase state and turnip burrows, we should bury the hole.
+        if (noise[0] == "burrowing") {
+            scene.time.removeAllEvents();
+            this.stateMachine.transition("bury", noise[1]); 
+            //noise[1] is obj: location: x,y; (hole tile pos) and the shop UI sprite for the hole 
+            return;
+        }
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
         if (alert != "none") {
             if (alert == "sees turnip") {
@@ -379,10 +387,28 @@ class ChaseState extends FarmerState {
 
 //go to hole tile and bury it.
 class BuryState extends FarmerState {
-    constructor(scene, farmer) { super(scene, farmer); }
+    constructor(scene, farmer, field) { 
+        super(scene, farmer);
+        this.tileInfo; 
+        this.path;
+        this.field = field;
+    }
 
-    enter(scene, farmer, audios, path) {
-        //follow given path
+    enter(scene, farmer, audios, path, tileInfo) {
+        farmer.stopFollow();
+        console.log(tileInfo);
+        this.tileInfo = tileInfo;
+        let locationX = this.field.tileToWorldX(this.tileInfo.location.x);
+        let locationY = this.field.tileToWorldY(this.tileInfo.location.y);
+        //TODO: create an angry emoji above farmer's head
+        this.path = scene.add.path(farmer.x, farmer.y)
+        this.path.lineTo(locationX, locationY);
+        farmer.setPath(this.path);
+        //this.path.draw(this.graphics);
+        //TODO: check for obstacles in the way and create a path around them
+        this.updateSpeed(farmer, 1);
+        //console.log(this.pathConfig.duration);
+        farmer.startFollow(this.pathConfig);
     }
 
     execute(scene, farmer, audio, turnip, noise) {
@@ -390,6 +416,21 @@ class BuryState extends FarmerState {
         //replace hole tile with buried hole tile
         //somehow remove the hole tile from usable holes
         //transition to search state
+        if (!farmer.isFollowing()) {
+            //after a little bit of not finding anything, go back to the normal walking routes
+            scene.time.delayedCall(100, () => {
+                if (!farmer.isFollowing()) {
+                    //TODO: play burying animation
+                    //TODO: on animation complete
+                    this.field.putTileAt(9, this.tileInfo.location.x, this.tileInfo.location.y, false);
+                    this.tileInfo.sprite.setTexture('covered hole');
+                    this.tileInfo.sprite.covered = true;
+                    scene.time.removeAllEvents();
+                    this.stateMachine.transition("findPath"); 
+                    return;
+                }
+            }, null, this);
+        }
     }
 }
 
