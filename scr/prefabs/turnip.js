@@ -223,6 +223,7 @@ class StealState extends TurnipState {
     execute(scene, turnip, audios, field) {
         //on animation complete
         this.stats.crops++;
+        this.stats.totalCrops++;
         let cropsLayer = field.getLayer("crops");
         //TODO: have it spawn a crop falling into the UI bag display
         field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);

@@ -300,8 +300,9 @@ class SearchState extends FarmerState {
 //follow direct path between farmer and turnip
 //if turnip goes out of view, stop at the last place seen and search
 class ChaseState extends FarmerState {
-    constructor(scene, farmer) { 
+    constructor(scene, farmer, stats) { 
         super(scene, farmer);
+        this.stats = stats;
     }
 
     enter(scene, farmer, audios, turnip, timeDelay) {
@@ -358,6 +359,7 @@ class ChaseState extends FarmerState {
                     //keep chasing him with shorter delay
                     scene.time.delayedCall(100, () => {
                         if (!farmer.isFollowing()) {
+                            this.stats.escaped++;
                             scene.time.removeAllEvents();
                             this.stateMachine.transition("chase", 500);
                             return;

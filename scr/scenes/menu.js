@@ -11,7 +11,7 @@ class Menu extends Phaser.Scene {
             fontSize: '48px',
             backgroundColor: '#F3B141',
             color: '#843605',
-            align: 'right',
+            align: 'center',
             padding: {
                 top: 5,
                 bottom: 5,
@@ -20,7 +20,7 @@ class Menu extends Phaser.Scene {
         }
 
         //TODO: change this to be clickable button.
-        this.scoreText = this.add.text(1280/2,736/2, "Press Space to start", textConfig);
+        this.scoreText = this.add.text(1280/2,736/2, "Press Space to start", textConfig).setOrigin(0.5);;
         this.SPACEKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         

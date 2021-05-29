@@ -47,10 +47,6 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
-        //add UI images
-        // this.UIgroup = this.add.group({
-        //     runChildUpdate: true,    // make sure update runs on group children
-        // });
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
         this.shop.setScrollFactor(0);
         this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
@@ -59,14 +55,6 @@ class Play extends Phaser.Scene {
         this.pescotti.setScrollFactor(0);
         this.bag = this.add.sprite(1158, 736, "bag").setOrigin(0);
         this.bag.setScrollFactor(0);
-        // this.UIgroup.add(this.shop);
-        // this.UIgroup.add(this.tower);
-        // this.UIgroup.add(this.pescotti);
-        // this.UIgroup.add(this.bag);
-        // let UIarray = this.UIgroup.getChildren();
-        // for (let UIelement of UIarray){
-        //     this.UIelement.setScrollFactor(0);
-        // }
 
         //find the number of holes in the tilemap
         //and create holes to match in the UI accordingly
@@ -111,9 +99,13 @@ class Play extends Phaser.Scene {
         this.minimap.ignore(this.pescotti);
 
         //define stats
-        this.stats = {};
-        this.stats.score = 0;
-        this.stats.crops = 0;
+        this.stats = {
+            score: 0,
+            crops: 0,
+            totalCrops: 0,
+            escaped: 0,
+            title: "none"
+        };
 
         //text configuration
         let textConfig = {
@@ -147,7 +139,7 @@ class Play extends Phaser.Scene {
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this, this.farmer),
-            chase: new ChaseState(this, this.farmer),
+            chase: new ChaseState(this, this.farmer, this.stats),
             findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
             water: new WaterState(this, this.farmer),
@@ -191,7 +183,7 @@ class Play extends Phaser.Scene {
         //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
         //can also: restart game or back to main menu)
         if(loseCondition) {
-            this.scene.start("menuScene");
+            this.scene.start("gameOverScene", this.stats);
         }
     }
 
