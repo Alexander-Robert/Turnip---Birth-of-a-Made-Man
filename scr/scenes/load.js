@@ -13,8 +13,15 @@ class Load extends Phaser.Scene {
         this.load.image("shopUI", "shopUI.png");
         this.load.image("pescotti", "pescotti.png");
         this.load.image("field_set", "tileset.png");
+
+        this.load.atlas('warning', 'warning.png',
+            'warning.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('question', 'question.png',
+            'question.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+
         this.load.audio("running", "running.wav");
         this.load.audio("harvest", "rustle.ogg");
+
         this.load.spritesheet("object_set", "objects.png", {
             frameWidth: 32,
             frameHeight: 32

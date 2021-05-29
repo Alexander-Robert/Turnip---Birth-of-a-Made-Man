@@ -199,11 +199,32 @@ class Play extends Phaser.Scene {
 
     //defines all the animations used in play.js
     createAnimations() {
+        //turnip anims
         // this.anims.create({
         //     key: 'move-down',
         //     frameRate: 16,
         //     repeat: -1,
         //     frames: this.anims.generateFrameNames() //TODO: fill this out
         // });
+
+        //farmer anims
+        //warning symbol appear above farmer when he's chasing
+        this.anims.create({
+            key: 'warning anim',
+            frames: this.anims.generateFrameNames('warning', {
+                first: 0,
+                end: 3,
+            }),
+            frameRate: 7,
+        });
+        //question symbol appear above farmer when he's chasing
+        this.anims.create({
+            key: 'question anim',
+            frames: this.anims.generateFrameNames('question', {
+                first: 0,
+                end: 3,
+            }),
+            frameRate: 7,
+        });
     }
 }

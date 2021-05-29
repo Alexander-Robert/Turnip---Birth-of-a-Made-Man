@@ -208,7 +208,11 @@ class SearchState extends FarmerState {
             return;
         let locationX = turnip.x;
         let locationY = turnip.y;
-        //TODO: create a question mark above farmer's head
+        let question = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'question');
+        question.anims.play('question anim');
+        question.on('animationcomplete', () => {
+            question.destroy();
+        });
         //check if we have a specific delay before farmer goes to location of the noise
         this.delay = (timeDelay !== undefined) ? timeDelay : 2000;
         scene.time.delayedCall(this.delay, () => {
@@ -309,7 +313,11 @@ class ChaseState extends FarmerState {
         farmer.stopFollow();
         let locationX = turnip.x;
         let locationY = turnip.y;
-        //TODO: create an exclamation point above farmer's head
+        let warning = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'warning');
+            warning.anims.play('warning anim');
+            warning.on('animationcomplete', () => {
+                warning.destroy();
+            });
         let delay = (timeDelay !== undefined) ? timeDelay : 500;
         scene.time.delayedCall(delay, () => {
             this.path = scene.add.path(farmer.x, farmer.y)
