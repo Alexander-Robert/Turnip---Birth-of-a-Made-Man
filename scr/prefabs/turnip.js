@@ -167,7 +167,10 @@ class MoveState extends TurnipState {
         }
 
         //if turnip is running on crops
-        if(super.checkTileType(scene, turnip, field).name == "crop"){
+        if(super.checkTileType(scene, turnip, field).name == "crop") {
+            this.stateMachine.setInfo("running over crops");
+        }
+        else {
             this.stateMachine.setInfo("running");
         }
 
