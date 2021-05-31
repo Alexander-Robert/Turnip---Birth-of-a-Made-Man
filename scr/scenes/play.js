@@ -48,13 +48,10 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
-        this.shop.setScrollFactor(0);
-        this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
-        this.tower.setScrollFactor(0);
+        this.lightHouse = this.add.sprite(1280, 0, "light house").setOrigin(0);
         this.pescotti = this.add.sprite(this.shop.x, this.shop.y, "pescotti").setOrigin(0);
-        this.pescotti.setScrollFactor(0);
         this.bag = this.add.sprite(1158, 736, "bag").setOrigin(0);
-        this.bag.setScrollFactor(0);
+        this.reputation = this.add.sprite(1280, 736, "reputation").setOrigin(0);
 
         //find the number of holes in the tilemap
         //and create holes to match in the UI accordingly
@@ -77,27 +74,6 @@ class Play extends Phaser.Scene {
             this.holes[i].sprite.setScrollFactor(0);
         }
 
-
-        //camera definitions
-        //lock camera to map size bounds
-        this.cameras.main.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
-        //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
-        this.cameras.main.startFollow(this.turnip, true, 1, 0.5);
-        this.cameras.main.setDeadzone(0,100);
-        
-        //add minimap camera
-        //TODO: fix it so minimap moves just like the main camera
-        //TODO: create variables/consts to replace hard codes values with
-        this.minimap = this.cameras.add(1280, 0, 1280, 736 / 4).setZoom(0.25);
-        this.minimap.setBounds(0,0,1280, 2000); //TODO: find out how to get the tilemap width and height
-        //                           roundPixels = true,    0.5 is the y lerp (camera follow slugishness)
-        this.minimap.startFollow(this.turnip, true, 1, 0.5);
-        this.minimap.setDeadzone(0, 250); 
-
-        this.minimap.ignore(this.shop);
-        this.minimap.ignore(this.tower);
-        this.minimap.ignore(this.pescotti);
-
         //define stats
         this.stats = {
             score: 0,
@@ -108,12 +84,16 @@ class Play extends Phaser.Scene {
         };
 
         //text configuration
-        let textConfig = {
-            fontFamily: 'Courier',
-            fontSize: '48px',
-            backgroundColor: '#F3B141',
+        let titleTextConfig = {
+            fontFamily: 'Lobster',
+            fontSize: '32px',
+            color: '#000000',
+        }
+        let pointsTextConfig = {
+            fontFamily: 'COWBOY JUNIOR',
+            fontSize: '62px',
             color: '#843605',
-            align: 'left',
+            align: 'center',
             wordWrap: { width: 300, useAdvancedWrap: true },
             padding: {
                 top: 5,
@@ -121,11 +101,18 @@ class Play extends Phaser.Scene {
             },
             fixedWidth: 0
         }
-
-        this.scoreText = this.add.text(1280,736, `reputation ` + this.stats.score, textConfig);
-        this.cropsText = this.add.text(1280,826, "crops:" + this.stats.crops, textConfig);
-        this.scoreText.setScrollFactor(0);
-        this.cropsText.setScrollFactor(0);
+        
+        this.scoreText = this.add.text(1290,745, "Reputation " + this.stats.score, pointsTextConfig);
+        
+        //text array for highlighting the current title
+        this.titlesText = [];
+        this.titlesText.push(this.add.text(1420,265, "Boss", titleTextConfig));
+        this.titlesText.push(this.add.text(1378,310, "Consigliere", titleTextConfig));
+        this.titlesText.push(this.add.text(1385,355, "Underboss", titleTextConfig));
+        this.titlesText.push(this.add.text(1375,395, "Caporegime", titleTextConfig));
+        this.titlesText.push(this.add.text(1405,440, "Soldier", titleTextConfig));
+        this.titlesText.push(this.add.text(1390,485, "Associate", titleTextConfig));
+        this.titlesText.push(this.add.text(1395,535, "Bag Man", titleTextConfig));
 
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
@@ -165,12 +152,11 @@ class Play extends Phaser.Scene {
         }
 
         if(turnipStep == "steal") { //update the text
-            this.cropsText.text = "crops:" + this.stats.crops;
+            //TODO: update bag image
         }
         if(turnipStep == "burrow") { //update the text
-            this.scoreText.text = `reputation ` + this.stats.score;
-            this.cropsText.text = "crops:" + this.stats.crops;
-
+            this.scoreText.text = "Reputation " + this.stats.score;
+            //TODO: update bag image
         }
 
         //check lose conditions: (farmer and turnip collision or all holes covered)
