@@ -53,6 +53,7 @@ class Load extends Phaser.Scene {
         this.load.image("bag", "bag.png");
         this.load.image("shopUI", "shopUI.png");
         this.load.image("field_set", "tileset.png");
+        this.load.image("star", "star.png");
 
         //audio
         this.load.audio("running", "running.wav");
