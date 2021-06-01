@@ -12,7 +12,7 @@ let config = {
     type: Phaser.AUTO,
     pixelArt: true,
     width: 1600,
-    height: 870,
+    height: 886,
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH

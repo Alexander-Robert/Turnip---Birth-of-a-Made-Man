@@ -116,6 +116,9 @@ class FarmerState extends State {
     updateDirection(farmer) {
         if (this.oldDirection != farmer.direction) {
             this.oldDirection = farmer.direction;
+            if(farmer.isFollowing()) {
+                farmer.play(`farmer-${farmer.direction}`);
+            }
             //TODO: set the farmer's image to the corresponding direction
             return true;
         }
@@ -203,6 +206,7 @@ class SearchState extends FarmerState {
 
     enter(scene, farmer, audios, turnip, timeDelay, skipEnter) {
         farmer.stopFollow();
+        farmer.anims.stop();
         this.lookingAround = false;
         if(skipEnter)
             return;
@@ -278,14 +282,20 @@ class SearchState extends FarmerState {
             }
             scene.time.delayedCall(1000, () => {
                 farmer.direction = turnOrder[0];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(2000, () => {
                 farmer.direction = turnOrder[1];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(3000, () => {
                 farmer.direction = turnOrder[2];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(4000, () => {
@@ -311,6 +321,7 @@ class ChaseState extends FarmerState {
 
     enter(scene, farmer, audios, turnip, timeDelay) {
         farmer.stopFollow();
+        farmer.anims.stop();
         let locationX = turnip.x;
         let locationY = turnip.y;
         let warning = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'warning');
@@ -406,6 +417,7 @@ class BuryState extends FarmerState {
 
     enter(scene, farmer, audios, path, tileInfo) {
         farmer.stopFollow();
+        farmer.anims.stop();
         console.log(tileInfo);
         this.tileInfo = tileInfo;
         let locationX = this.field.tileToWorldX(this.tileInfo.location.x);
