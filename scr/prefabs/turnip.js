@@ -282,7 +282,6 @@ class BurrowState extends TurnipState {
         if ((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
             turnip.body.setVelocity(0);
         //check for transitions
-        //if (!(this.turnipUI.anims.isPlaying && this.turnipUI.anims.currentAnim.key === 'turnip-exit')) {
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed
             //check if turnip is overlapping with any exit tunnels (AKA trying to leave the shop)
             for (let hole of this.holes) {
@@ -304,7 +303,7 @@ class BurrowState extends TurnipState {
                                 field.tileToWorldY(hole.location.y));
                             turnip.alpha = 1;
                             turnip.play("turnip-exit");
-                            turnip.on('animationcomplete', () => {
+                            turnip.on('animationcomplete-turnip-exit', () => {
                                 this.stateMachine.transition('idle');
                             });
                         });
@@ -345,7 +344,6 @@ class BurrowState extends TurnipState {
             this.turnipUI.body.setVelocityX(0);
             return;
         }
-    //}
     }
 
     exit(scene, turnip, audios) {
