@@ -418,7 +418,7 @@ class BuryState extends FarmerState {
     enter(scene, farmer, audios, path, tileInfo) {
         farmer.stopFollow();
         farmer.anims.stop();
-        console.log(tileInfo);
+        //console.log(tileInfo);
         this.tileInfo = tileInfo;
         let locationX = this.field.tileToWorldX(this.tileInfo.location.x);
         let locationY = this.field.tileToWorldY(this.tileInfo.location.y);

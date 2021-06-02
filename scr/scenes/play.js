@@ -102,7 +102,7 @@ class Play extends Phaser.Scene {
             })
         }
         for (let i = 0; i < this.holes.length; i++) {
-            this.holes[i].sprite = this.add.sprite(500 + (150 * i), 800, "hole").setScale(0.75);
+            this.holes[i].sprite = this.add.sprite(500 + (150 * i), 800, "hole").setScale(0.6);
             this.holes[i].sprite.setScrollFactor(0);
         }
 
@@ -149,11 +149,12 @@ class Play extends Phaser.Scene {
 
         //TODO: can use farmer's info to see what type of crop he's closest to
         //allows for pescotti to reward more points for stealing crops close to the farmer
-        let currentState = this.farmerFSM.getState();
+        let currentState = this.turnipFSM.getState();
         if (this.savedState != currentState) {
             console.log(currentState);
             this.savedState = currentState;
         }
+        //console.log(this.turnipFSM.getState());
 
         if (turnipStep == "steal" || turnipStep == "burrow") { //update the text
             if (turnipStep == 'burrow')
@@ -272,12 +273,12 @@ class Play extends Phaser.Scene {
             frames: this.anims.generateFrameNames('farmer_right', { first: 0, end: 3 }),
         });
         this.anims.create({ //warning symbol appear above farmer when he's chasing
-            key: 'warning anim', frameRate: 8,
-            frames: this.anims.generateFrameNames('warning', { first: 0, end: 3, }),
+            key: 'warning anim', frameRate: 8, repeat: 0,
+            frames: this.anims.generateFrameNames('warning', { first: 0, end: 3}),
         });
         this.anims.create({ //question symbol appear above farmer when he's chasing
-            key: 'question anim', frameRate: 8,
-            frames: this.anims.generateFrameNames('question', { first: 0, end: 3, }),
+            key: 'question anim', frameRate: 8, repeat: 0,
+            frames: this.anims.generateFrameNames('question', { first: 0, end: 3}),
         });
     }
 }
