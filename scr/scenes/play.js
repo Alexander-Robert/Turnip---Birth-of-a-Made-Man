@@ -50,10 +50,6 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
-        //add UI images
-        // this.UIgroup = this.add.group({
-        //     runChildUpdate: true,    // make sure update runs on group children
-        // });
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
         this.shop.setScrollFactor(0);
         this.tower = this.add.sprite(1280, 184, "tower").setOrigin(0);
@@ -62,14 +58,6 @@ class Play extends Phaser.Scene {
         this.pescotti.setScrollFactor(0);
         this.bag = this.add.sprite(1158, 736, "bag").setOrigin(0);
         this.bag.setScrollFactor(0);
-        // this.UIgroup.add(this.shop);
-        // this.UIgroup.add(this.tower);
-        // this.UIgroup.add(this.pescotti);
-        // this.UIgroup.add(this.bag);
-        // let UIarray = this.UIgroup.getChildren();
-        // for (let UIelement of UIarray){
-        //     this.UIelement.setScrollFactor(0);
-        // }
 
         //find the number of holes in the tilemap
         //and create holes to match in the UI accordingly
@@ -113,13 +101,14 @@ class Play extends Phaser.Scene {
         this.minimap.ignore(this.tower);
         this.minimap.ignore(this.pescotti);
 
-        //temp keys for testing stats //TODO: remove when you've created win/lose condition
-        this.keys.Bkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
-
         //define stats
-        this.stats = {};
-        this.stats.score = 0;
-        this.stats.crops = 0;
+        this.stats = {
+            score: 0,
+            crops: 0,
+            totalCrops: 0,
+            escaped: 0,
+            title: "none"
+        };
 
         //text configuration
         let textConfig = {
@@ -153,11 +142,11 @@ class Play extends Phaser.Scene {
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this, this.farmer),
-            chase: new ChaseState(this, this.farmer),
+            chase: new ChaseState(this, this.farmer, this.stats),
             findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
             water: new WaterState(this, this.farmer),
-            bury: new BuryState(this, this.farmer),
+            bury: new BuryState(this, this.farmer, field),
         }, [this, this.farmer, this.audios, this.turnip]);
 
         //TODO: remove when farmer AI is complete
@@ -179,16 +168,25 @@ class Play extends Phaser.Scene {
         }
 
         if(turnipStep == "steal") { //update the text
-            this.cropsText.text = "crops: " + this.stats.crops;
+            this.cropsText.text = "crops:" + this.stats.crops;
         }
         if(turnipStep == "burrow") { //update the text
             this.scoreText.text = `reputation ` + this.stats.score;
-            this.cropsText.text = "crops: " + this.stats.crops;
+            this.cropsText.text = "crops:" + this.stats.crops;
 
         }
-        //TODO: remove B button when win/loss condition is working
-        if (Phaser.Input.Keyboard.JustDown(this.keys.Bkey)) {
-            this.scene.start("menuScene");
+
+        //check lose conditions: (farmer and turnip collision or all holes covered)
+        let loseCondition = true;
+        for(let hole of this.holes) {
+            if (hole.sprite.covered != true)
+                loseCondition = false;
+        }
+        //TODO: replace menuScene transition to gameOverScene transition 
+        //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
+        //can also: restart game or back to main menu)
+        if(loseCondition) {
+            this.scene.start("gameOverScene", this.stats);
         }
     }
 
@@ -206,11 +204,32 @@ class Play extends Phaser.Scene {
 
     //defines all the animations used in play.js
     createAnimations() {
+        //turnip anims
         // this.anims.create({
         //     key: 'move-down',
         //     frameRate: 16,
         //     repeat: -1,
         //     frames: this.anims.generateFrameNames() //TODO: fill this out
         // });
+
+        //farmer anims
+        //warning symbol appear above farmer when he's chasing
+        this.anims.create({
+            key: 'warning anim',
+            frames: this.anims.generateFrameNames('warning', {
+                first: 0,
+                end: 3,
+            }),
+            frameRate: 7,
+        });
+        //question symbol appear above farmer when he's chasing
+        this.anims.create({
+            key: 'question anim',
+            frames: this.anims.generateFrameNames('question', {
+                first: 0,
+                end: 3,
+            }),
+            frameRate: 7,
+        });
     }
 }

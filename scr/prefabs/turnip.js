@@ -98,8 +98,8 @@ class TurnipState extends State {
             case 8:
                 return { tile: tile, name: "hole" };
             default:
-                console.warn("found some other tile not listed");
-                console.log(tile);
+                // console.warn("found some other tile not listed");
+                // console.log(tile);
                 return { tile: tile, name: "other" };
         }
     }
@@ -167,7 +167,10 @@ class MoveState extends TurnipState {
         }
 
         //if turnip is running on crops
-        if(super.checkTileType(scene, turnip, field).name == "crop"){
+        if(super.checkTileType(scene, turnip, field).name == "crop") {
+            this.stateMachine.setInfo("running over crops");
+        }
+        else {
             this.stateMachine.setInfo("running");
         }
 
@@ -220,6 +223,7 @@ class StealState extends TurnipState {
     execute(scene, turnip, audios, field) {
         //on animation complete
         this.stats.crops++;
+        this.stats.totalCrops++;
         let cropsLayer = field.getLayer("crops");
         //TODO: have it spawn a crop falling into the UI bag display
         field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);
@@ -233,7 +237,7 @@ class BurrowState extends TurnipState {
         super(scene);
         this.turnipUI = scene.physics.add.sprite(800, 800, 'turnip').setSize(0.75);
         this.turnipUI.setScrollFactor(0);
-        this.turnipUI.velocity = 150;
+        this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
         this.stats = stats;
         this.holes = holes;
@@ -250,6 +254,7 @@ class BurrowState extends TurnipState {
         //create a separate sprite in the shop UI that player controls
         //play an entrance animation to the shop UI
         this.holeIndex = this.findHole(tile);
+        this.stateMachine.setInfo("burrowing", this.holes[this.holeIndex]);
         turnip.setPosition(-1000, -1000); //put turnip off the map
         turnip.alpha = 0;
         this.turnipUI.x = this.holes[this.holeIndex].sprite.x;
@@ -267,11 +272,13 @@ class BurrowState extends TurnipState {
             for(let hole of this.holes){
                 //TODO, if multiple holes are overlapping check which is closer to turnip and select that one.
                 // console.log(this.checkOverlap(this.turnipUI, hole.sprite));
-                if(this.checkOverlap(this.turnipUI, hole.sprite)){
-                    turnip.setPosition(
-                        field.tileToWorldX(hole.location.x),
-                        field.tileToWorldY(hole.location.y));
-                        this.stateMachine.transition('idle');
+                if(hole.sprite.covered != true) {
+                    if(this.checkOverlap(this.turnipUI, hole.sprite)){
+                        turnip.setPosition(
+                            field.tileToWorldX(hole.location.x),
+                            field.tileToWorldY(hole.location.y));
+                            this.stateMachine.transition('idle');
+                    }
                 }
             }
             if ((this.turnipUI.body.position.x < 250)){
