@@ -245,11 +245,8 @@ class BurrowState extends TurnipState {
 
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
-<<<<<<< HEAD
         this.stateMachine.setInfo("burrowing");
         audios.dig.play();
-=======
->>>>>>> 6d1e99d3575397c40e9821a6959655bdf5d800e8
         //play burrow animation
         //on animation complete
         //make turnip invisible
