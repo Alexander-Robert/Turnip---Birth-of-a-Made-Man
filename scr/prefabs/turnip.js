@@ -277,6 +277,7 @@ class BurrowState extends TurnipState {
             if ((this.turnipUI.body.position.x < 250)){
                 this.stats.score += this.stats.crops * 5;
                 this.stats.crops = 0;
+                audios.sell.play();
             }
             //check type of tile turnip is on.
             //If the type is an interactible tile, 

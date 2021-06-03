@@ -5,6 +5,9 @@ class Play extends Phaser.Scene {
     create() {
         console.log("created playScene!");
 
+        this.music = this.sound.add('music', {volume: 0.2}, { loop: true }, );
+        this.music.play();
+
         //define key inputs
         //NOTE: keys must be defined before turnipFSM 
         //because the constructors for the states try to access this scene's defined keys
@@ -195,6 +198,7 @@ class Play extends Phaser.Scene {
         this.audios.running = this.sound.add('running', { loop: true });
         this.audios.harvest = this.sound.add('harvest', {volume: 0.5});
         this.audios.dig = this.sound.add('dig', {volume: 0.4});
+        this.audios.sell = this.sound.add('sell', {volume: 0.5});
     }
 
     
