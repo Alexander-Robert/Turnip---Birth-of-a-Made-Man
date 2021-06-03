@@ -149,7 +149,7 @@ class Play extends Phaser.Scene {
 
         //TODO: can use farmer's info to see what type of crop he's closest to
         //allows for pescotti to reward more points for stealing crops close to the farmer
-        let currentState = this.turnipFSM.getState();
+        let currentState = this.farmerFSM.getState();
         if (this.savedState != currentState) {
             console.log(currentState);
             this.savedState = currentState;

@@ -210,9 +210,10 @@ class SearchState extends FarmerState {
         this.lookingAround = false;
         if(skipEnter)
             return;
+
         let locationX = turnip.x;
         let locationY = turnip.y;
-        let question = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'question');
+        let question = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'question');
         question.anims.play('question anim');
         question.on('animationcomplete', () => {
             question.destroy();
@@ -324,11 +325,11 @@ class ChaseState extends FarmerState {
         farmer.anims.stop();
         let locationX = turnip.x;
         let locationY = turnip.y;
-        let warning = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'warning');
-            warning.anims.play('warning anim');
-            warning.on('animationcomplete', () => {
-                warning.destroy();
-            });
+        let warning = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'warning', 0);
+        warning.anims.play('warning anim');
+        warning.on('animationcomplete', () => {
+            warning.destroy();
+        });
         let delay = (timeDelay !== undefined) ? timeDelay : 500;
         scene.time.delayedCall(delay, () => {
             this.path = scene.add.path(farmer.x, farmer.y)
