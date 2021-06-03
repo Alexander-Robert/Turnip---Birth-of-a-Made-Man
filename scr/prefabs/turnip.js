@@ -322,7 +322,7 @@ class BurrowState extends TurnipState {
         }
 
         // handle movement
-        if ((this.A.isDown) && (this.turnipUI.body.position.x > 340)) { //Left is pressed
+        if ((this.A.isDown) && (this.turnipUI.body.position.x > 350)) { //Left is pressed
             if (!this.turnipUI.anims.isPlaying || this.turnipUI.anims.currentAnim.key === 'turnip-right') {
                 this.turnipUI.play('turnip-left');
             }
