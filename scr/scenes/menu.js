@@ -8,15 +8,10 @@ class Menu extends Phaser.Scene {
         //text configuration
         let textConfig = {
             fontFamily: 'Courier',
-            fontSize: '48px',
-            backgroundColor: '#F3B141',
-            color: '#843605',
+            fontSize: '36px',
+            backgroundColor: '#FFFFFF',
+            color: '#000000',
             align: 'center',
-            padding: {
-                top: 5,
-                bottom: 5,
-            },
-            fixedWidth: 0
         }
 
         this.scoreText = this.add.text(1280/2,736/2, "Press Space to start", textConfig).setOrigin(0.5);
@@ -34,13 +29,34 @@ class Menu extends Phaser.Scene {
         this.buttons.push(this.buttonExit, this.buttonInfo, this.buttonLeftArrow, this.buttonRightArrow);
         this.initializeButtons();
 
-        
         this.tutorialGroup.add(this.infoScreen);
         this.tutorialGroup.add(this.buttonExit);
         this.tutorialGroup.add(this.buttonLeftArrow);
         this.tutorialGroup.add(this.buttonRightArrow);
         this.tutorialGroup.setVisible(0);
         this.tutorial = false; //bool for displaying game info screen
+
+        this.tutorialText = [];
+        this.tutorialText.push(this.add.text(150, 190,
+            "This is what the game looks like\nLet's start with the basics", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "You play as this bunny named Turnip", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "Turnip is trying to steal crops from a farm,\nfor a sinister plan", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "Turnip has a few different burrows in the farm.\nHe can use those to go and sell his crops to the mob", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "The shopkeeper, Pescotti is glad to\n those precious crops off Turnip's hand", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "In exchange, Turnip gains reputation in the mob", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "In the beginning,\nTurnip has the lowly title of Bag Man", textConfig));
+        this.tutorialText.push(this.add.text(150, 190,
+            "With enough reputation,\nTurnip can rise through the tower of titles!", textConfig));
+        this.tutorialText.push(this.add.text(150, 100,
+            "But beware of the farmer!\nIf the farmer hears or sees you,\nthen you'll be in trouble", textConfig));
+        this.tutorialText.push(this.add.text(150, 100,
+            "It's game over if you get caught or\nif they close off all burrows to the shop.\nGood luck!", textConfig));
     }
 
     update() {
@@ -49,9 +65,18 @@ class Menu extends Phaser.Scene {
         }
         if(this.tutorial) {
             this.tutorialGroup.setVisible(1);
+            for(let i = 0; i < this.tutorialText.length; ++i) {
+                if(i == parseInt(this.infoScreen.frame.name)) {
+                    this.tutorialText[i].alpha = 1;
+                }
+                else
+                    this.tutorialText[i].alpha = 0;
+            }
         }
         else {
             this.tutorialGroup.setVisible(0);
+            for(let i = 0; i < this.tutorialText.length; ++i)
+                    this.tutorialText[i].alpha = 0;
         }
     }
 
