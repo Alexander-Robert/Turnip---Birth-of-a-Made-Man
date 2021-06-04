@@ -55,6 +55,9 @@ class Load extends Phaser.Scene {
         this.load.image("field_set", "tileset.png");
         this.load.image("star", "star.png");
 
+        //scene images
+        this.load.image("win-screen", "win-screen.png");
+
         //audio
         this.load.audio("running", "running.wav");
         this.load.audio("harvest", "rustle.ogg");

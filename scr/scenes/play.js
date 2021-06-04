@@ -15,6 +15,8 @@ class Play extends Phaser.Scene {
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        this.Hkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
+
         //create audios object of different audios
         this.createAudio();
 
@@ -85,6 +87,16 @@ class Play extends Phaser.Scene {
         this.add.text(1115, 790, this.maxCrops, titleTextConfig);
         this.add.text(1175, 825, "crops", titleTextConfig);
 
+        this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.lightHouse.depth);
+        this.winScreen.alpha = 0;
+        this.endScreenTween = this.tweens.add({
+            targets: this.winScreen,
+            x: {from: this.winScreen.x, to: 0},
+            ease: 'Sine.easeInOut',
+            duration: 3500,
+            paused: true,
+        });
+
         this.starTweenGrow = this.tweens.add({
             targets: this.star,
             scale: {from: 1, to: 5},
@@ -95,9 +107,6 @@ class Play extends Phaser.Scene {
             yoyo: true,
             hold: 1000,
             paused: true,
-            // onComplete: function() {
-            // },
-            // onCompleteScope: this,
         });
 
         //find the number of holes in the tilemap
@@ -161,6 +170,12 @@ class Play extends Phaser.Scene {
         //process current step within the turnipFSM and farmerFSM
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
+
+
+        if (Phaser.Input.Keyboard.JustDown(this.Hkey)) {
+            this.winScreen.alpha = 1;
+            this.endScreenTween.play();
+        }
 
         //TODO: can use farmer's info to see what type of crop he's closest to
         //allows for pescotti to reward more points for stealing crops close to the farmer

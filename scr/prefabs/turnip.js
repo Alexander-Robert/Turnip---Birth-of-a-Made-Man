@@ -247,7 +247,21 @@ class StealState extends TurnipState {
 class BurrowState extends TurnipState {
     constructor(scene, stats, holes, pescotti) {
         super(scene);
-        this.turnipUI = scene.physics.add.sprite(800, 810, 'turnip down').setSize(0.6);
+        this.turnipUI = scene.physics.add.sprite(800, 810, 'turnip-enter', 0).setSize(0.6);
+        // let fixImage = (turnipUI) => {
+        //     console.log("fixImage called");
+        //     turnipUI.setScale(1);
+        //     turnipUI.setTexture('turnip down');
+        // };
+        // this.enterTween = scene.tweens.add({
+        //     targets: this.turnipUI,
+        //     scale: { from: 1, to: 2},
+        //     ease: 'Linear',
+        //     duration: 3000,
+        //     paused: true,
+        //     onComplete: fixImage(this.turnipUI),
+        //     onCompleteScope: scene,
+        // });
         this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
         this.stats = stats;
@@ -267,6 +281,7 @@ class BurrowState extends TurnipState {
             this.turnipUI.x = this.holes[this.holeIndex].sprite.x;
             this.turnipUI.alpha = 1;
             this.turnipUI.play('turnip-exit');
+            //this.enterTween.play();
             this.pescotti.play('poof anim').setScale(0.60);
             this.pescotti.on('animationcomplete', () => {
                 this.pescotti.setScale(0.70);
@@ -322,12 +337,12 @@ class BurrowState extends TurnipState {
         }
 
         // handle movement
-        if ((this.A.isDown) && (this.turnipUI.body.position.x > 350)) { //Left is pressed
+        if ((this.A.isDown) && (this.turnipUI.body.position.x > 310)) { //Left is pressed
             if (!this.turnipUI.anims.isPlaying || this.turnipUI.anims.currentAnim.key === 'turnip-right') {
                 this.turnipUI.play('turnip-left');
             }
             this.turnipUI.body.setVelocityX(-this.turnipUI.velocity);
-        } else if ((this.D.isDown) && (this.turnipUI.body.position.x < 855)) { //Right is pressed
+        } else if ((this.D.isDown) && (this.turnipUI.body.position.x < 800)) { //Right is pressed
             if (!this.turnipUI.anims.isPlaying || (this.turnipUI.anims.currentAnim.key === 'turnip-left')) {
                 this.turnipUI.play('turnip-right');
             }
