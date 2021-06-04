@@ -497,7 +497,7 @@ class pathState extends FarmerState {
                     else
                         break;
                 }
-                path.draw(this.graphics);
+                //path.draw(this.graphics);
                 //enter the path into the paths array
                 this.paths.push(path);
                 //copy the reverse of the path (creates bidirectional pathing for farmer's passive walking routes)

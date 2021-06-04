@@ -54,10 +54,18 @@ class Load extends Phaser.Scene {
         this.load.image("field_set", "tileset.png");
         this.load.image("star", "star.png");
         this.load.atlas('light house', 'lightup.png', 'lightup.json', 
-        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //scene images
         this.load.image("win-screen", "win-screen.png");
+        this.load.atlas('info-screen', '/tutorial/tutorial.png', '/tutorial/tutorial.json',
+        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('exit button', '/tutorial/exitButton.png', '/tutorial/exitButton.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('info button', '/tutorial/infoButton.png', '/tutorial/infoButton.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('arrow button', '/tutorial/arrowButton.png', '/tutorial/arrowButton.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //audio
         this.load.audio("running", "running.wav");
