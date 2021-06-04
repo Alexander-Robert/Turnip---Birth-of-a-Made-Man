@@ -185,40 +185,29 @@ class Play extends Phaser.Scene {
             else
                 this.crops.setX(1085);
 
-            let playStarTweens = (yValue, title) => {
-                this.tweens.add({
-                    targets: this.star,
-                    y: { from: this.star.y, to: yValue },
-                    ease: 'Back.easeInOut',
-                    repeat: 0,
-                    duration: 1500,
-                });
-                this.starTweenGrow.play();
-                this.stats.title = title;
-            };
             if (this.stats.score >= 50 && this.stats.score < 100) {
                 if(this.star.y != 485)
-                    playStarTweens(485, "Associate");
+                    this.playStarTweens(485, "Associate");
             }
-            else if (this.stats.score >= 50 && this.stats.score < 100) {
+            else if (this.stats.score >= 100 && this.stats.score < 150) {
                 if(this.star.y != 440)
-                    playStarTweens(440, "Soldier");
+                    this.playStarTweens(440, "Soldier");
             }
-            else if (this.stats.score >= 50 && this.stats.score < 100) {
+            else if (this.stats.score >= 150 && this.stats.score < 200) {
                 if(this.star.y != 395)
-                    playStarTweens(395, "Caporegime");
+                    this.playStarTweens(395, "Caporegime");
             }
-            else if (this.stats.score >= 50 && this.stats.score < 100) {
+            else if (this.stats.score >= 200 && this.stats.score < 250) {
                 if(this.star.y != 355)
-                    playStarTweens(355, "Underboss");
+                    this.playStarTweens(355, "Underboss");
             }
-            else if (this.stats.score >= 50 && this.stats.score < 100) {
+            else if (this.stats.score >= 250 && this.stats.score < 300) {
                 if(this.star.y != 310)
-                    playStarTweens(310, "Consigliere");
+                    this.playStarTweens(310, "Consigliere");
             }
-            else if (this.stats.score >= 50 && this.stats.score < 100) {
+            else if (this.stats.score >= 300 && this.stats.score < 350) {
                 if(this.star.y != 265)
-                    playStarTweens(265, "Boss");
+                    this.playStarTweens(265, "Boss");
             }
         }
 
@@ -234,6 +223,18 @@ class Play extends Phaser.Scene {
         if (loseCondition) {
             this.scene.start("gameOverScene", this.stats);
         }
+    }
+
+    playStarTweens(yValue, title) {
+        this.tweens.add({
+            targets: this.star,
+            y: { from: this.star.y, to: yValue },
+            ease: 'Back.easeInOut',
+            repeat: 0,
+            duration: 1500,
+        });
+        this.starTweenGrow.play();
+        this.stats.title = title;
     }
 
     //defines all audios into an object to pass to FSM that uses it.
