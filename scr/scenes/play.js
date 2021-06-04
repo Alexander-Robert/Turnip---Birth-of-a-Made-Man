@@ -78,7 +78,7 @@ class Play extends Phaser.Scene {
         }
 
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
-        this.lightHouse = this.add.sprite(1280, 0, "light house").setOrigin(0);
+        this.lightHouse = this.add.sprite(1280, 0, "light house", 0).setOrigin(0);
         this.pescotti = this.add.sprite(20, 736, "pescotti pool").setOrigin(0).setScale(0.70);
         this.bag = this.add.sprite(943, 750, "bagbear", 0).setOrigin(0).setScale(0.65);
         this.star = this.add.sprite(1300, 530, "star", 0).setOrigin(0.5,0);
@@ -202,27 +202,27 @@ class Play extends Phaser.Scene {
 
             if (this.stats.score >= 50 && this.stats.score < 100) {
                 if(this.star.y != 485)
-                    this.playStarTweens(485, "Associate");
+                    this.titleRankUp(485, "Associate");
             }
             else if (this.stats.score >= 100 && this.stats.score < 150) {
                 if(this.star.y != 440)
-                    this.playStarTweens(440, "Soldier");
+                    this.titleRankUp(440, "Soldier");
             }
             else if (this.stats.score >= 150 && this.stats.score < 200) {
                 if(this.star.y != 395)
-                    this.playStarTweens(395, "Caporegime");
+                    this.titleRankUp(395, "Caporegime");
             }
             else if (this.stats.score >= 200 && this.stats.score < 250) {
                 if(this.star.y != 355)
-                    this.playStarTweens(355, "Underboss");
+                    this.titleRankUp(355, "Underboss");
             }
             else if (this.stats.score >= 250 && this.stats.score < 300) {
                 if(this.star.y != 310)
-                    this.playStarTweens(310, "Consigliere");
+                    this.titleRankUp(310, "Consigliere");
             }
             else if (this.stats.score >= 300 && this.stats.score < 350) {
                 if(this.star.y != 265)
-                    this.playStarTweens(265, "Boss");
+                    this.titleRankUp(265, "Boss");
             }
         }
 
@@ -240,7 +240,7 @@ class Play extends Phaser.Scene {
         }
     }
 
-    playStarTweens(yValue, title) {
+    titleRankUp(yValue, title) {
         this.tweens.add({
             targets: this.star,
             y: { from: this.star.y, to: yValue },
@@ -249,6 +249,7 @@ class Play extends Phaser.Scene {
             duration: 1500,
         });
         this.starTweenGrow.play();
+        this.lightHouse.play('light up');
         this.stats.title = title;
     }
 
@@ -264,6 +265,11 @@ class Play extends Phaser.Scene {
 
     //defines all the animations used in play.js
     createAnimations() {
+        //lighthouse anim
+        this.anims.create({ //question symbol appear above farmer when he's chasing
+            key: 'light up', duration: 1000, repeat: 2, yoyo: true,
+            frames: this.anims.generateFrameNames('light house', { first: 0, end: 1}),
+        });
         //pescotti poof anim
         this.anims.create({
             key: 'poof anim', frameRate: 6, repeat: 0,

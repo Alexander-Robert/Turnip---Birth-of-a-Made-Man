@@ -49,11 +49,12 @@ class Load extends Phaser.Scene {
         //other UI assets
         this.load.image("hole", "hole.png");
         this.load.image("covered hole", "covered hole.png");
-        this.load.image("light house", "lighthouse_wbackground.png");
         this.load.image("bag", "bag.png");
         this.load.image("shopUI", "shopUI.png");
         this.load.image("field_set", "tileset.png");
         this.load.image("star", "star.png");
+        this.load.atlas('light house', 'lightup.png', 'lightup.json', 
+        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //scene images
         this.load.image("win-screen", "win-screen.png");
