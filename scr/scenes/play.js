@@ -79,11 +79,26 @@ class Play extends Phaser.Scene {
         this.lightHouse = this.add.sprite(1280, 0, "light house").setOrigin(0);
         this.pescotti = this.add.sprite(20, 736, "pescotti pool").setOrigin(0).setScale(0.70);
         this.bag = this.add.sprite(943, 750, "bagbear", 0).setOrigin(0).setScale(0.65);
-        this.star = this.add.sprite(1300, 530, "star", 0).setOrigin(0);
+        this.star = this.add.sprite(1300, 530, "star", 0).setOrigin(0.5,0);
         this.crops = this.add.text(1085, 765, this.stats.crops, titleTextConfig);
         this.maxCrops = 10;
         this.add.text(1115, 790, this.maxCrops, titleTextConfig);
         this.add.text(1175, 825, "crops", titleTextConfig);
+
+        this.starTweenGrow = this.tweens.add({
+            targets: this.star,
+            scale: {from: 1, to: 5},
+            angle: {from: 0, to: 360},
+            ease: 'Sine.easeInOut',
+            repeat: 0,
+            duration: 750,
+            yoyo: true,
+            hold: 1000,
+            paused: true,
+            // onComplete: function() {
+            // },
+            // onCompleteScope: this,
+        });
 
         //find the number of holes in the tilemap
         //and create holes to match in the UI accordingly
@@ -154,9 +169,8 @@ class Play extends Phaser.Scene {
             console.log(currentState);
             this.savedState = currentState;
         }
-        //console.log(this.turnipFSM.getState());
 
-        if (turnipStep == "steal" || turnipStep == "burrow") { //update the text
+        if (turnipStep == "steal" || turnipStep == "burrow") { //update the UI
             if (turnipStep == 'burrow')
                 this.scoreText.text = "Reputation " + this.stats.score;
             this.crops.text = this.stats.crops;
@@ -171,29 +185,40 @@ class Play extends Phaser.Scene {
             else
                 this.crops.setX(1085);
 
+            let playStarTweens = (yValue, title) => {
+                this.tweens.add({
+                    targets: this.star,
+                    y: { from: this.star.y, to: yValue },
+                    ease: 'Back.easeInOut',
+                    repeat: 0,
+                    duration: 1500,
+                });
+                this.starTweenGrow.play();
+                this.stats.title = title;
+            };
             if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(485);
-                this.stats.title = 'Associate';
+                if(this.star.y != 485)
+                    playStarTweens(485, "Associate");
             }
             else if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(440);
-                this.stats.title = 'Soldier';
+                if(this.star.y != 440)
+                    playStarTweens(440, "Soldier");
             }
             else if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(395);
-                this.stats.title = 'Caporegime';
+                if(this.star.y != 395)
+                    playStarTweens(395, "Caporegime");
             }
             else if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(355);
-                this.stats.title = 'Underboss';
+                if(this.star.y != 355)
+                    playStarTweens(355, "Underboss");
             }
             else if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(310);
-                this.stats.title = 'Consigliere';
+                if(this.star.y != 310)
+                    playStarTweens(310, "Consigliere");
             }
             else if (this.stats.score >= 50 && this.stats.score < 100) {
-                this.star.setY(265);
-                this.stats.title = 'Boss';
+                if(this.star.y != 265)
+                    playStarTweens(265, "Boss");
             }
         }
 
