@@ -81,6 +81,18 @@ class Play extends Phaser.Scene {
             escaped: 0,
             title: "Bag Man"
         };
+        this.oldScore = this.stats.score;
+        this.easedcounter = this.tweens.addCounter({
+            from: this.oldScore,
+            to: this.stats.score,
+            duration: 3000,
+            ease: 'Linear',
+            paused: true,
+            onComplete: function() {
+                this.oldScore = this.stats.score;
+            },
+            onCompleteScope: this
+        });
 
         //text configuration
         let titleTextConfig = {
@@ -150,7 +162,7 @@ class Play extends Phaser.Scene {
             })
         }
         for (let i = 0; i < this.holes.length; i++) {
-            this.holes[i].sprite = this.add.sprite(500 + (150 * i), 800, "hole").setScale(0.6);
+            this.holes[i].sprite = this.add.sprite(550 + (150 * i), 800, "hole").setScale(0.6);
             this.holes[i].sprite.setScrollFactor(0);
         }
 
@@ -212,10 +224,31 @@ class Play extends Phaser.Scene {
             this.savedState = currentState;
         }
 
+        this.crops.text = this.stats.crops;
+        if(this.oldScore != this.stats.score) {
+            if(!this.easedcounter.isPlaying()) {
+                this.easedcounter = this.tweens.addCounter({
+                    from: this.oldScore,
+                    to: this.stats.score,
+                    duration: 3000,
+                    ease: 'Cubic.easeIn',
+                    paused: true,
+                    onComplete: function() {
+                        this.oldScore = this.stats.score;
+                    },
+                    onCompleteScope: this
+                });
+            }
+            this.easedcounter.play();
+            this.scoreText.text = "Reputation " + this.easedcounter.getValue().toFixed(0);
+        }
+        else {
+            this.scoreText.text = "Reputation " + this.stats.score;
+        }
+
         if (turnipStep == "steal" || turnipStep == "burrow") { //update the UI
-            if (turnipStep == 'burrow')
-                this.scoreText.text = "Reputation " + this.stats.score;
-            this.crops.text = this.stats.crops;
+            if (turnipStep == 'burrow'){
+            }
             if (this.stats.crops < 3)
                 this.bag.setFrame(0);
             else if (this.stats.crops >= 3 && this.stats.crops <= 6)
