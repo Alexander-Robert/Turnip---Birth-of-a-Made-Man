@@ -162,51 +162,54 @@ class Menu extends Phaser.Scene {
         //     this.buttonInstructions,
         //     this.buttonCredits
         // ], 
-        // this.pinkTween = this.tweens.add({
-        //     targets: this.pink,
-        //     x: { from: game.config.width, to: -this.pink.width},
-        //     ease: 'Sine.easeInOut',
-        //     duration: 2000,
-        //     repeat: 1,
-        //     onRepeat: function() {
-        //         this.pinkTween.duration -= 500;
-        //     },
-        //     onRepeatScope: this,
-        //     onComplete: function() {
-        //         this.pinkFinalTween.play();
-        //     },
-        //     onCompleteScope: this
-        // });
-        // this.pinkFinalTween = this.tweens.add({
-        //     targets: this.pink,
-        //     x: { from: game.config.width, to: -this.pink.width},
-        //     ease: 'Sine.easeInOut',
-        //     duration: 2000,
-        //     repeat: 3,
-        //     paused: true,
-        //     onRepeat: function() {
-        //         this.pinkTween.duration -= 500;
-        //     },
-        //     onRepeatScope: this,
-        //     onComplete: function() {
-        //         this.titleTween.play();
-        //     },
-        //     onCompleteScope: this
-        // });
-        // this.purpleTween = this.tweens.add({
-        //     targets: this.purple,
-        //     x: { from: game.config.width, to: -this.pink.width},
-        //     ease: 'Sine.easeInOut',
-        //     duration: 2500,
-        //     repeat: 1,
-        //     onRepeat: function() {
-        //         this.pinkTween.duration -= 500;
-        //     },
-        //     onRepeatScope: this,
-        //     onComplete: function() {
-        //         this.titleTween.play();
-        //     },
-        //     onCompleteScope: this
-        // });
+        this.pinkTween = this.tweens.add({
+            targets: this.pink,
+            x: { from: game.config.width, to: -this.pink.width},
+            ease: 'Sine.easeInOut',
+            duration: 2000,
+            repeat: 2,
+            onRepeat: function() {
+                this.pinkTween.duration -= 750;
+            },
+            onRepeatScope: this,
+            onComplete: function() {
+                this.pinkFinalTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.pinkFinalTween = this.tweens.add({
+            targets: this.pink,
+            x: { from: game.config.width, to: 0},
+            ease: 'Sine.easeOut',
+            duration: 1500,
+            paused: true
+        });
+        this.purpleTween = this.tweens.add({
+            targets: this.purple,
+            x: { from: game.config.width, to: -this.purple.width},
+            ease: 'Sine.easeInOut',
+            duration: 2500,
+            repeat: 2,
+            onRepeat: function() {
+                this.pinkTween.duration -= 750;
+            },
+            onRepeatScope: this,
+            onComplete: function() {
+                this.purpleFinalTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.purpleFinalTween = this.tweens.add({
+            targets: this.purple,
+            x: { from: game.config.width, to: this.pink.width},
+            ease: 'Sine.easeOut',
+            duration: 2000,
+            paused: true,
+            onComplete: function() {
+                console.log("tweens done");
+                //this.titleTween.play();
+            },
+            onCompleteScope: this
+        });
     }
 }
