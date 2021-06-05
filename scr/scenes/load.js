@@ -110,12 +110,6 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
-         // check for local storage browser support
-         if(window.localStorage) {
-            console.log('Local storage supported');
-        } else {
-            console.warn('Local storage not supported');
-        }
         this.scene.start("menuScene", [false]);
     }
 }

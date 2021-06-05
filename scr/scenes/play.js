@@ -84,7 +84,7 @@ class Play extends Phaser.Scene {
 
         //text configuration
         let titleTextConfig = {
-            fontFamily: 'Lobster',
+            fontFamily: 'font1',
             fontSize: '32px',
             color: '#000000',
         }
@@ -159,7 +159,7 @@ class Play extends Phaser.Scene {
         //text array for highlighting the current title
         this.titlesText = [];
         this.titlesText.push(this.add.text(1420, 265, "Boss", titleTextConfig));
-        this.titlesText.push(this.add.text(1378, 310, "Consigliere", titleTextConfig));
+        this.titlesText.push(this.add.text(1382, 310, "Consigliere", titleTextConfig));
         this.titlesText.push(this.add.text(1385, 355, "Underboss", titleTextConfig));
         this.titlesText.push(this.add.text(1375, 395, "Caporegime", titleTextConfig));
         this.titlesText.push(this.add.text(1405, 440, "Soldier", titleTextConfig));
