@@ -263,6 +263,7 @@ class Play extends Phaser.Scene {
         this.audios.harvest = this.sound.add('harvest', {volume: 0.5});
         this.audios.dig = this.sound.add('dig', {volume: 0.4});
         this.audios.sell = this.sound.add('sell', {volume: 0.5});
+        this.audios.ocean = this.sound.add('ocean_waves', { loop: true });
     }
 
 
