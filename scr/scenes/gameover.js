@@ -7,7 +7,6 @@ class GameOver extends Phaser.Scene {
         console.log(this.stats);
     }
     create() {
-        console.log("created gameOverScene!");
          //text configuration
          let textConfig = {
             fontFamily: 'Courier',
@@ -33,12 +32,13 @@ class GameOver extends Phaser.Scene {
             escapes ${this.stats.escaped}
             `, textConfig).setOrigin(0.5);
         this.SPACEKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        //this.Rkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        this.RKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        this.gamePlayImage = this.add.image(0, 0, 'titlesnapshot').setOrigin(0).setDepth(1000);
     }
     update() {
-        // if (Phaser.Input.Keyboard.JustDown(this.RKey)) {
-        //     this.scene.start("playScene");
-        // }
+        if (Phaser.Input.Keyboard.JustDown(this.RKey)) {
+            this.scene.start("playScene");
+        }
         if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
             this.scene.start("menuScene", [false]);
         }

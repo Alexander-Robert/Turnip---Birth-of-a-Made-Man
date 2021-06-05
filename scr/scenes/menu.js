@@ -79,8 +79,8 @@ class Menu extends Phaser.Scene {
             "Use these buttons to navigate the instructions", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
             "This is what the game looks like\nLet's start with the basics", textConfig));
-        this.tutorialText.push(this.add.text(150, 190,
-            "You play as this bunny named Turnip", textConfig));
+        this.tutorialText.push(this.add.text(100, 190,
+            "You play as this bunny named Turnip\nYou can move around with W A S D\nand interact with space", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
             "Turnip is trying to steal crops from a farm,\nfor a sinister plan", textConfig));
         this.tutorialText.push(this.add.text(150, 190,

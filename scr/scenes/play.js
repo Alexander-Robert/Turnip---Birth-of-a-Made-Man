@@ -342,6 +342,15 @@ class Play extends Phaser.Scene {
     }
     transitionGameOver() {
         this.music.stop();
+        let textureManager = this.textures;
+            this.game.renderer.snapshot((image) => {
+                // make sure an existing texture w/ that key doesn't already exist
+                if(textureManager.exists('titlesnapshot')) {
+                    textureManager.remove('titlesnapshot');
+                }
+                // take the snapshot img returned from callback and add to texture manager
+                textureManager.addImage('titlesnapshot', image);
+            });
         this.scene.start("gameOverScene", this.stats);
     }
 
