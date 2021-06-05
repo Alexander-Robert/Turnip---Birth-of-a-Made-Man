@@ -33,8 +33,11 @@ class TurnipState extends State {
         //subclasses will call super.execute(scene, turnip, ...args); to use the common behaviors
     }
 
+    //returns the tile and tile name that turnip is currently on.
     checkTileType(scene, turnip, field) {
-        //returns the tile and tile name that turnip is currently on.
+        //if turnip is off the map (in the case of being in the burrow state), return
+        if(turnip.body.position.x < 0 || turnip.body.position.y < 0)
+            return { tile: null, name: "none" };
 
         //check all corners of turnip and determine what tile the player probably wants to interact with
         //aka if there's only 1 interactible tile found in all corners of turnip, return that tile
@@ -112,14 +115,15 @@ class IdleState extends TurnipState {
     enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
         this.stateMachine.setInfo("none");
-        //play the stop (reset turnip to be a static idle image instead of an animation) 
-        //turnip.anims.play(`walk-${turnip.direction}`);
-        //turnip.anims.stop();
+        //play the stop (reset turnip to be a static idle image instead of an animation)
+        turnip.anims.stop();
+        turnip.setTexture('turnip down');
     }
 
     execute(scene, turnip, audios, field) {
         //check for transitions
-        //if the interact key is pressed 
+        //if the interact key is pressed
+        if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
@@ -151,6 +155,7 @@ class MoveState extends TurnipState {
     execute(scene, turnip, audios, field) {
         //check for transitions
         //if the interact key is pressed 
+        if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
@@ -167,7 +172,7 @@ class MoveState extends TurnipState {
         }
 
         //if turnip is running on crops
-        if(super.checkTileType(scene, turnip, field).name == "crop") {
+        if (super.checkTileType(scene, turnip, field).name == "crop") {
             this.stateMachine.setInfo("running over crops");
         }
         else {
@@ -198,7 +203,7 @@ class MoveState extends TurnipState {
             turnip.direction = 'right';
         }
         // handle animation
-        //turnip.anims.play(`walk-${turnip.direction}`, true);
+        turnip.anims.play(`turnip-${turnip.direction}`, true);
     }
     exit(scene, turnip, audios) {
         audios.running.stop();
@@ -207,13 +212,16 @@ class MoveState extends TurnipState {
 }
 
 class StealState extends TurnipState {
-    constructor(scene, stats) {
+    constructor(scene, stats, maxCrops) {
         super(scene);
         this.stats = stats;
         this.tileInfo;
+        this.maxCrops = maxCrops;
     }
 
     enter(scene, turnip, audios, field, tileInfo) {
+        if (this.stats.crops == this.maxCrops)
+            return;
         this.tileInfo = tileInfo;
         //play stealing animation
         audios.harvest.play();
@@ -221,10 +229,14 @@ class StealState extends TurnipState {
     }
 
     execute(scene, turnip, audios, field) {
+        if (this.stateMachine.transitioning) return;
+        if (this.stats.crops == this.maxCrops) {
+            this.stateMachine.transition("idle");
+            return "steal";
+        }
         //on animation complete
         this.stats.crops++;
         this.stats.totalCrops++;
-        let cropsLayer = field.getLayer("crops");
         //TODO: have it spawn a crop falling into the UI bag display
         field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);
         this.stateMachine.transition("idle");
@@ -233,58 +245,89 @@ class StealState extends TurnipState {
 }
 
 class BurrowState extends TurnipState {
-    constructor(scene, stats, holes) {
+    constructor(scene, stats, holes, pescotti) {
         super(scene);
-        this.turnipUI = scene.physics.add.sprite(800, 800, 'turnip').setSize(0.75);
-        this.turnipUI.setScrollFactor(0);
+        this.turnipUI = scene.physics.add.sprite(800, 810, 'turnip-enter', 0).setSize(0.6);
+        // let fixImage = (turnipUI) => {
+        //     console.log("fixImage called");
+        //     turnipUI.setScale(1);
+        //     turnipUI.setTexture('turnip down');
+        // };
+        // this.enterTween = scene.tweens.add({
+        //     targets: this.turnipUI,
+        //     scale: { from: 1, to: 2},
+        //     ease: 'Linear',
+        //     duration: 3000,
+        //     paused: true,
+        //     onComplete: fixImage(this.turnipUI),
+        //     onCompleteScope: scene,
+        // });
         this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
         this.stats = stats;
         this.holes = holes;
+        this.pescotti = pescotti;
     }
 
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
-<<<<<<< HEAD
         this.stateMachine.setInfo("burrowing");
         audios.dig.play();
-=======
->>>>>>> 6d1e99d3575397c40e9821a6959655bdf5d800e8
-        //play burrow animation
-        //on animation complete
-        //make turnip invisible
-        //ask farmerFSM if it should cover the hole or not.
-        //create a separate sprite in the shop UI that player controls
-        //play an entrance animation to the shop UI
+        // handle animation
         this.holeIndex = this.findHole(tile);
         this.stateMachine.setInfo("burrowing", this.holes[this.holeIndex]);
-        turnip.setPosition(-1000, -1000); //put turnip off the map
-        turnip.alpha = 0;
-        this.turnipUI.x = this.holes[this.holeIndex].sprite.x;
-        this.turnipUI.alpha = 1;
-
+        turnip.anims.play(`turnip-enter`);
+        turnip.on('animationcomplete-turnip-enter', () => {
+            turnip.setPosition(-1000, -1000); //put turnip off of the gameplay screen
+            turnip.alpha = 0;
+            this.turnipUI.x = this.holes[this.holeIndex].sprite.x;
+            this.turnipUI.alpha = 1;
+            this.turnipUI.play('turnip-exit');
+            //this.enterTween.play();
+            this.pescotti.play('poof anim').setScale(0.60);
+            this.pescotti.on('animationcomplete', () => {
+                this.pescotti.setScale(0.70);
+                this.pescotti.setX(100);
+                this.pescotti.setTexture('pescotti sale');
+            });
+        });
     }
 
     execute(scene, turnip, audios, field) {
+        if (this.stateMachine.transitioning) return;
         this.stateMachine.setInfo("none");
         if ((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
             turnip.body.setVelocity(0);
         //check for transitions
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) { //if the interact key is pressed
             //check if turnip is overlapping with any exit tunnels (AKA trying to leave the shop)
-            for(let hole of this.holes){
-                //TODO, if multiple holes are overlapping check which is closer to turnip and select that one.
-                // console.log(this.checkOverlap(this.turnipUI, hole.sprite));
-                if(hole.sprite.covered != true) {
-                    if(this.checkOverlap(this.turnipUI, hole.sprite)){
-                        turnip.setPosition(
-                            field.tileToWorldX(hole.location.x),
-                            field.tileToWorldY(hole.location.y));
-                            this.stateMachine.transition('idle');
+            for (let hole of this.holes) {
+                if (hole.sprite.covered != true) {
+                    if (this.checkOverlap(this.turnipUI, hole.sprite)) {
+                        this.turnipUI.play('turnip-enter');
+                        this.turnipUI.on('animationcomplete-turnip-enter', () => {
+                            this.turnipUI.body.setVelocityX(0);
+                            this.turnipUI.alpha = 0;
+                            this.pescotti.setX(20);
+                            this.pescotti.play('poof anim').setScale(0.60);
+                            this.pescotti.on('animationcomplete', () => {
+                                this.pescotti.setScale(0.70);
+                                this.pescotti.setX(20);
+                                this.pescotti.setTexture('pescotti pool');
+                            });
+                            turnip.setPosition(
+                                field.tileToWorldX(hole.location.x),
+                                field.tileToWorldY(hole.location.y));
+                            turnip.alpha = 1;
+                            turnip.play("turnip-exit");
+                            turnip.on('animationcomplete-turnip-exit', () => {
+                                this.stateMachine.transition('idle');
+                            });
+                        });
                     }
                 }
             }
-            if ((this.turnipUI.body.position.x < 250)){
+            if ((this.turnipUI.body.position.x < 380)) {
                 this.stats.score += this.stats.crops * 5;
                 this.stats.crops = 0;
                 audios.sell.play();
@@ -297,22 +340,28 @@ class BurrowState extends TurnipState {
         }
 
         // handle movement
-        if ((this.A.isDown) && (this.turnipUI.body.position.x > 215)) { //Left is pressed
+        if ((this.A.isDown) && (this.turnipUI.body.position.x > 310)) { //Left is pressed
+            if (!this.turnipUI.anims.isPlaying || this.turnipUI.anims.currentAnim.key === 'turnip-right') {
+                this.turnipUI.play('turnip-left');
+            }
             this.turnipUI.body.setVelocityX(-this.turnipUI.velocity);
-            //TODO: flip sprite image left facing
-        } else if ((this.D.isDown) && (this.turnipUI.body.position.x < 1215)) { //Right is pressed
+        } else if ((this.D.isDown) && (this.turnipUI.body.position.x < 800)) { //Right is pressed
+            if (!this.turnipUI.anims.isPlaying || (this.turnipUI.anims.currentAnim.key === 'turnip-left')) {
+                this.turnipUI.play('turnip-right');
+            }
             this.turnipUI.body.setVelocityX(this.turnipUI.velocity);
-            //TODO: flip sprite image right facing 
         }
         //if NONE of the move keys were pressed
         else {
+            if (this.turnipUI.anims.isPlaying
+                && (this.turnipUI.anims.currentAnim.key === 'turnip-left'
+                    || this.turnipUI.anims.currentAnim.key === 'turnip-right')) {
+                this.turnipUI.anims.stop();
+                this.turnipUI.setTexture('turnip down');
+            }
             this.turnipUI.body.setVelocityX(0);
-            //stop moving animation
             return;
         }
-
-        // handle animation
-        //turnip.anims.play(`walk-${turnip.direction}`, true);
     }
 
     exit(scene, turnip, audios) {
@@ -324,15 +373,13 @@ class BurrowState extends TurnipState {
         audios.dig.play();
         turnip.alpha = 1;
 
-        this.turnipUI.body.setVelocityX(0);
-        this.turnipUI.alpha = 0;
     }
 
     findHole(tile) {
         for (let i = 0; i < this.holes.length; ++i) {
-            if (tile.x == this.holes[i].location.x && tile.y == this.holes[i].location.y){
-                    return i;
-                }
+            if (tile.x == this.holes[i].location.x && tile.y == this.holes[i].location.y) {
+                return i;
+            }
         }
         return 0;
     }
@@ -341,6 +388,6 @@ class BurrowState extends TurnipState {
     checkOverlap(turnip, hole) {
         let boundsA = turnip.getBounds();
         let boundsB = hole.getBounds();
-        return Phaser.Geom.Intersects.RectangleToRectangle(boundsA,boundsB);
+        return Phaser.Geom.Intersects.RectangleToRectangle(boundsA, boundsB);
     }
 }

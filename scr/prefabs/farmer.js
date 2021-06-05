@@ -116,6 +116,9 @@ class FarmerState extends State {
     updateDirection(farmer) {
         if (this.oldDirection != farmer.direction) {
             this.oldDirection = farmer.direction;
+            if(farmer.isFollowing()) {
+                farmer.play(`farmer-${farmer.direction}`);
+            }
             //TODO: set the farmer's image to the corresponding direction
             return true;
         }
@@ -203,12 +206,14 @@ class SearchState extends FarmerState {
 
     enter(scene, farmer, audios, turnip, timeDelay, skipEnter) {
         farmer.stopFollow();
+        farmer.anims.stop();
         this.lookingAround = false;
         if(skipEnter)
             return;
+
         let locationX = turnip.x;
         let locationY = turnip.y;
-        let question = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'question');
+        let question = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'question');
         question.anims.play('question anim');
         question.on('animationcomplete', () => {
             question.destroy();
@@ -278,14 +283,20 @@ class SearchState extends FarmerState {
             }
             scene.time.delayedCall(1000, () => {
                 farmer.direction = turnOrder[0];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(2000, () => {
                 farmer.direction = turnOrder[1];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(3000, () => {
                 farmer.direction = turnOrder[2];
+                farmer.play(`farmer-${farmer.direction}`);
+                farmer.anims.stop();
                 //TODO: update farmer image to corresponding direction
             }, null, this);
             scene.time.delayedCall(4000, () => {
@@ -311,13 +322,14 @@ class ChaseState extends FarmerState {
 
     enter(scene, farmer, audios, turnip, timeDelay) {
         farmer.stopFollow();
+        farmer.anims.stop();
         let locationX = turnip.x;
         let locationY = turnip.y;
-        let warning = scene.add.sprite(farmer.x, farmer.y - farmer.height, 'warning');
-            warning.anims.play('warning anim');
-            warning.on('animationcomplete', () => {
-                warning.destroy();
-            });
+        let warning = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'warning', 0);
+        warning.anims.play('warning anim');
+        warning.on('animationcomplete', () => {
+            warning.destroy();
+        });
         let delay = (timeDelay !== undefined) ? timeDelay : 500;
         scene.time.delayedCall(delay, () => {
             this.path = scene.add.path(farmer.x, farmer.y)
@@ -406,7 +418,8 @@ class BuryState extends FarmerState {
 
     enter(scene, farmer, audios, path, tileInfo) {
         farmer.stopFollow();
-        console.log(tileInfo);
+        farmer.anims.stop();
+        //console.log(tileInfo);
         this.tileInfo = tileInfo;
         let locationX = this.field.tileToWorldX(this.tileInfo.location.x);
         let locationY = this.field.tileToWorldY(this.tileInfo.location.y);
@@ -484,7 +497,7 @@ class pathState extends FarmerState {
                     else
                         break;
                 }
-                path.draw(this.graphics);
+                //path.draw(this.graphics);
                 //enter the path into the paths array
                 this.paths.push(path);
                 //copy the reverse of the path (creates bidirectional pathing for farmer's passive walking routes)
