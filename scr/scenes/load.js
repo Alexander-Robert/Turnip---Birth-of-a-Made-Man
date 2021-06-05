@@ -94,7 +94,6 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
-        console.log("created loadScene!");
-        this.scene.start("menuScene");
+        this.scene.start("menuScene", [true]);
     }
 }

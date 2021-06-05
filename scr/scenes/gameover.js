@@ -40,7 +40,7 @@ class GameOver extends Phaser.Scene {
             this.scene.start("playScene");
         }
         else if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
-            this.scene.start("menuScene");
+            this.scene.start("menuScene", [false]);
         }
     }
 }

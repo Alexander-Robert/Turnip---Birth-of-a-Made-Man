@@ -2,6 +2,9 @@ class Menu extends Phaser.Scene {
     constructor () {
         super("menuScene");
     }
+    init(playtweens) {
+        this.playtweens = playtweens[0];
+    }
     create(){
         //background menu images
         this.white               = this.add.image(0, 0, "white").setOrigin(0);
@@ -15,7 +18,7 @@ class Menu extends Phaser.Scene {
         this.thea_gamez          = this.add.image(1330, 130, "thea-gamez").setOrigin(0);
         this.turnip_throne       = this.add.image(180, 290, "turnip-throne").setOrigin(0);
         this.turnip_title        = this.add.image(64, 125, "turnip-title").setOrigin(0);
-
+        
         //create buttons
         this.buttons = [];
         this.buttonStart = this.add.sprite(1130, 665, 'start-game', 0).setOrigin(0);
@@ -26,10 +29,29 @@ class Menu extends Phaser.Scene {
         this.buttonRightArrow = this.add.sprite(160, 32, 'arrow button', 0).setOrigin(0).setDepth(100);
         this.buttons.push(this.buttonStart, this.buttonCredits, this.buttonInstructions,
             this.buttonExit, this.buttonLeftArrow, this.buttonRightArrow);
-        this.initializeButtons();
 
-        //create tweens for images
-        this.createTweens();
+        if (this.playtweens) { //if we're entering the menu scene and want to play the intro
+            this.buttonStart.x = game.config.width;
+            this.buttonInstructions.x = game.config.width;
+            this.buttonCredits.x = game.config.width;
+            this.turnip_throne.x = (game.config.width / 2) - (this.turnip_throne.width / 2);
+            this.turnip_title.x = (game.config.width / 2) - (this.pink.width / 2) - (this.turnip_title.width / 2);
+            this.birth_of_a_made_man.x = (game.config.width / 2) + (this.pink.width / 2) - (this.birth_of_a_made_man.width / 2);
+
+            this.birth_of_a_made_man.alpha = 0;
+            this.turnip_throne.alpha = 0;
+            this.thea_gamez.alpha = 0;
+            this.fiona_hsu.alpha = 0;
+            this.a_game_by.alpha = 0;
+            this.alex_robert.alpha = 0;
+            this.turnip_title.alpha = 0;
+
+            //create tweens for images
+            this.createTweens();
+        }
+        else { //if we don't want to play the intro, then create button's functionality
+            this.initializeButtons();
+        }
 
         //text configuration
         let textConfig = {
@@ -62,7 +84,7 @@ class Menu extends Phaser.Scene {
         this.tutorialText.push(this.add.text(150, 190,
             "Turnip has a few different burrows in the farm.\nHe can use those to go and sell his crops to the mob", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
-            "The shopkeeper, Pescotti is glad to\n those precious crops off Turnip's hand", textConfig));
+            "The shopkeeper, Pescotti is glad to take\n those precious crops off Turnip's hand", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
             "In exchange, Turnip gains reputation in the mob", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
@@ -150,37 +172,25 @@ class Menu extends Phaser.Scene {
     }
 
     createTweens() {
-        // targets: [
-        //     this.a_game_by,
-        //     this.alex_robert,
-        //     this.birth_of_a_made_man,
-        //     this.fiona_hsu,
-        //     this.thea_gamez,
-        //     this.turnip_throne,
-        //     this.turnip_title,
-        //     this.buttonStart,
-        //     this.buttonInstructions,
-        //     this.buttonCredits
-        // ], 
         this.pinkTween = this.tweens.add({
             targets: this.pink,
             x: { from: game.config.width, to: -this.pink.width},
             ease: 'Sine.easeInOut',
-            duration: 2000,
-            repeat: 2,
+            duration: 750,
+            repeat: 1,
             onRepeat: function() {
-                this.pinkTween.duration -= 750;
+                this.pinkTween.duration -= 250;
             },
             onRepeatScope: this,
             onComplete: function() {
-                this.pinkFinalTween.play();
+                this.pinkMiddleStopTween.play();
             },
             onCompleteScope: this
         });
-        this.pinkFinalTween = this.tweens.add({
+        this.pinkMiddleStopTween = this.tweens.add({
             targets: this.pink,
-            x: { from: game.config.width, to: 0},
-            ease: 'Sine.easeOut',
+            x: { from: game.config.width, to: (game.config.width / 2) - this.pink.width},
+            ease: 'Quint.easeOut',
             duration: 1500,
             paused: true
         });
@@ -188,28 +198,179 @@ class Menu extends Phaser.Scene {
             targets: this.purple,
             x: { from: game.config.width, to: -this.purple.width},
             ease: 'Sine.easeInOut',
-            duration: 2500,
-            repeat: 2,
+            duration: 1000,
+            repeat: 1,
             onRepeat: function() {
-                this.pinkTween.duration -= 750;
+                this.pinkTween.duration -= 250;
             },
             onRepeatScope: this,
             onComplete: function() {
-                this.purpleFinalTween.play();
+                this.purpleMiddleStopTween.play();
             },
             onCompleteScope: this
         });
-        this.purpleFinalTween = this.tweens.add({
+        this.purpleMiddleStopTween = this.tweens.add({
             targets: this.purple,
-            x: { from: game.config.width, to: this.pink.width},
-            ease: 'Sine.easeOut',
+            x: { from: game.config.width, to: (game.config.width / 2)},
+            ease: 'Quint.easeOut',
             duration: 2000,
             paused: true,
             onComplete: function() {
-                console.log("tweens done");
-                //this.titleTween.play();
+                this.titleTween.play();
+                this.titleNameTween.play();
+                this.throneTween.play();
             },
             onCompleteScope: this
         });
+        this.titleTween = this.tweens.add({
+            targets: this.turnip_title,
+            alpha: {from: 0, to: 1},
+            y: {from: this.turnip_title.y, to: this.turnip_title.y + 20},
+            ease: 'Quad.easeInOut',
+            duration: 2000,
+            paused: true,
+        });
+        this.titleNameTween = this.tweens.add({
+            targets: this.birth_of_a_made_man,
+            alpha: {from: 0, to: 1},
+            y: {from: this.birth_of_a_made_man.y, to: this.birth_of_a_made_man.y + 20},
+            ease: 'Quad.easeInOut',
+            duration: 2000,
+            paused: true,
+        });
+        this.throneTween = this.tweens.add({
+            targets: this.turnip_throne,
+            alpha: {from: 0, to: 1},
+            y: {from: game.config.height + this.turnip_throne.height, to: 290},
+            ease: 'Cubic.easeOut',
+            duration: 3000,
+            paused: true,
+            onComplete: function() {
+                this.throneLeftTween.play();
+                this.titleLeftTween.play();
+                this.titleNameLeftTween.play();
+                this.pinkLeftTween.play();
+                this.purpleLeftTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.throneLeftTween = this.tweens.add({
+            targets: this.turnip_throne,
+            x: { from: this.turnip_throne.x, to: 180},
+            ease: 'Sine.easeInOut',
+            duration: 1250,
+            //delay: 1000,
+            paused: true,
+        });
+        this.titleLeftTween = this.tweens.add({
+            targets: this.turnip_title,
+            x: { from: this.turnip_title.x, to: 64},
+            ease: 'Sine.easeInOut',
+            duration: 1250,
+            //delay: 1000,
+            paused: true,
+        });
+        this.titleNameLeftTween = this.tweens.add({
+            targets: this.birth_of_a_made_man,
+            x: { from: this.birth_of_a_made_man.x, to: 420},
+            ease: 'Sine.easeInOut',
+            duration: 1250,
+            //delay: 1000,
+            paused: true,
+        });
+        this.pinkLeftTween = this.tweens.add({
+            targets: this.pink,
+            x: { from: (game.config.width / 2) - this.pink.width, to: 0},
+            ease: 'Sine.easeInOut',
+            duration: 1250,
+            //delay: 1000,
+            paused: true,
+        });
+        this.purpleLeftTween = this.tweens.add({
+            targets: this.purple,
+            x: { from: (game.config.width / 2), to: this.purple.width},
+            ease: 'Sine.easeInOut',
+            duration: 1250,
+            //delay: 1000,
+            paused: true,
+            onComplete: function() {
+                this.aGameByTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.aGameByTween = this.tweens.add({
+            targets: this.a_game_by,
+            alpha: {from: 0, to: 1},
+            y: {from: this.a_game_by.y, to: this.a_game_by.y + 20},
+            ease: 'Sine.easeInOut',
+            duration: 1500,
+            paused: true,
+            onComplete: function() {
+                this.alexTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.alexTween = this.tweens.add({
+            targets: this.alex_robert,
+            alpha: {from: 0, to: 1},
+            ease: 'Sine.easeInOut',
+            duration: 500,
+            paused: true,
+            onComplete: function() {
+                this.fionaTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.fionaTween = this.tweens.add({
+            targets: this.fiona_hsu,
+            alpha: {from: 0, to: 1},
+            ease: 'Sine.easeInOut',
+            duration: 500,
+            paused: true,
+            onComplete: function() {
+                this.theaTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.theaTween = this.tweens.add({
+            targets: this.thea_gamez,
+            alpha: {from: 0, to: 1},
+            ease: 'Sine.easeInOut',
+            duration: 500,
+            paused: true,
+            onComplete: function() {
+                this.startTween.play();
+                this.instructionsTween.play();
+                this.creditsTween.play();
+            },
+            onCompleteScope: this
+        });
+        this.startTween = this.tweens.add({
+            targets: this.buttonStart,
+            x: {from: game.config.width + this.buttonStart.width, to: game.config.width - this.buttonStart.width},
+            ease: 'Sine.easeOut',
+            duration: 500,
+            paused: true,
+        });
+        this.instructionsTween = this.tweens.add({
+            targets: this.buttonInstructions,
+            x: {from: game.config.width + this.buttonInstructions.width, to: game.config.width - this.buttonInstructions.width},
+            ease: 'Sine.easeOut',
+            duration: 500,
+            paused: true,
+        });
+        this.creditsTween = this.tweens.add({
+            targets: this.buttonCredits,
+            x: {from: game.config.width + this.buttonCredits.width, to: game.config.width - this.buttonCredits.width},
+            ease: 'Sine.easeOut',
+            duration: 500,
+            paused: true,
+            onComplete: function() {
+                this.initializeButtons();
+            },
+            onCompleteScope: this
+        });
+        
+
     }
 }
