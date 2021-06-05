@@ -3,7 +3,33 @@ class Menu extends Phaser.Scene {
         super("menuScene");
     }
     create(){
-        console.log("created menuScene!");
+        //background menu images
+        this.white               = this.add.image(0, 0, "white").setOrigin(0);
+        this.pink                = this.add.image(0, 0, "pink").setOrigin(0);
+        this.purple              = this.add.image(375, 0, "purple").setOrigin(0);
+        ///create all menu images
+        this.a_game_by           = this.add.image(1080, 60, "a-game-by").setOrigin(0);
+        this.alex_robert         = this.add.image(775, 130, "alex-robert").setOrigin(0);
+        this.birth_of_a_made_man = this.add.image(420, 70, "birth-of-a-made-man").setOrigin(0);
+        this.fiona_hsu           = this.add.image(1080, 130, "fiona-hsu").setOrigin(0);
+        this.thea_gamez          = this.add.image(1330, 130, "thea-gamez").setOrigin(0);
+        this.turnip_throne       = this.add.image(180, 290, "turnip-throne").setOrigin(0);
+        this.turnip_title        = this.add.image(64, 125, "turnip-title").setOrigin(0);
+
+        //create buttons
+        this.buttons = [];
+        this.buttonStart = this.add.sprite(1130, 665, 'start-game', 0).setOrigin(0);
+        this.buttonInstructions = this.add.sprite(1050, 745, 'instructions', 0).setOrigin(0);
+        this.buttonCredits = this.add.sprite(1280, 825, 'credits', 0).setOrigin(0);
+        this.buttonExit = this.add.sprite(64, 32, 'exit button', 0).setOrigin(0).setDepth(100);
+        this.buttonLeftArrow = this.add.sprite(128, 32, 'arrow button', 0).setOrigin(0).setFlipX(true).setDepth(100);
+        this.buttonRightArrow = this.add.sprite(160, 32, 'arrow button', 0).setOrigin(0).setDepth(100);
+        this.buttons.push(this.buttonStart, this.buttonCredits, this.buttonInstructions,
+            this.buttonExit, this.buttonLeftArrow, this.buttonRightArrow);
+        this.initializeButtons();
+
+        //create tweens for images
+        this.createTweens();
 
         //text configuration
         let textConfig = {
@@ -13,21 +39,10 @@ class Menu extends Phaser.Scene {
             color: '#000000',
             align: 'center',
         }
-
-        this.scoreText = this.add.text(1280/2,736/2, "Press Space to start", textConfig).setOrigin(0.5);
-        this.SPACEKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         
         this.tutorialGroup = this.add.group({});
         this.infoScreen = this.add.image(0,0, 'info-screen', 0).setOrigin(0);
         this.infoScreen.lastFrame = 9; //couldn't find phaser method to find final frame so it's hardcoded
-
-        this.buttons = [];
-        this.buttonInfo = this.add.sprite(32, 32, 'info button', 0).setOrigin(0);
-        this.buttonExit = this.add.sprite(64, 32, 'exit button', 0).setOrigin(0);
-        this.buttonLeftArrow = this.add.sprite(96, 32, 'arrow button', 0).setOrigin(0).setFlipX(true);
-        this.buttonRightArrow = this.add.sprite(128, 32, 'arrow button', 0).setOrigin(0);
-        this.buttons.push(this.buttonExit, this.buttonInfo, this.buttonLeftArrow, this.buttonRightArrow);
-        this.initializeButtons();
 
         this.tutorialGroup.add(this.infoScreen);
         this.tutorialGroup.add(this.buttonExit);
@@ -35,6 +50,7 @@ class Menu extends Phaser.Scene {
         this.tutorialGroup.add(this.buttonRightArrow);
         this.tutorialGroup.setVisible(0);
         this.tutorial = false; //bool for displaying game info screen
+        this.start = false;
 
         this.tutorialText = [];
         this.tutorialText.push(this.add.text(150, 190,
@@ -60,9 +76,9 @@ class Menu extends Phaser.Scene {
     }
 
     update() {
-        if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
+        if(this.start)
             this.scene.start("playScene");
-        }
+
         if(this.tutorial) {
             this.tutorialGroup.setVisible(1);
             for(let i = 0; i < this.tutorialText.length; ++i) {
@@ -85,11 +101,17 @@ class Menu extends Phaser.Scene {
         //define specific button click methods
         //function requires us to pass the wrapper(i.e. the scene) of the tutorial property
         //because Javascript does not pass by reference!
+        this.buttonStart.click = function (scene) {
+            scene.start = true;
+        };
+        this.buttonCredits.click = function (scene) {
+            //scene.credits.alpha = (scene.credits.alpha) ? 0 : 1; 
+        };
+        this.buttonInstructions.click = function (scene) {
+            scene.tutorial = true;
+        };
         this.buttonExit.click = function (scene) {
             scene.tutorial = false;
-        };
-        this.buttonInfo.click = function (scene) {
-            scene.tutorial = true;
         };
         this.buttonLeftArrow.click = function (scene) {
             let frameName = parseInt(scene.infoScreen.frame.name);
@@ -125,5 +147,66 @@ class Menu extends Phaser.Scene {
                 button.setFrame(0);
             });
         }
+    }
+
+    createTweens() {
+        // targets: [
+        //     this.a_game_by,
+        //     this.alex_robert,
+        //     this.birth_of_a_made_man,
+        //     this.fiona_hsu,
+        //     this.thea_gamez,
+        //     this.turnip_throne,
+        //     this.turnip_title,
+        //     this.buttonStart,
+        //     this.buttonInstructions,
+        //     this.buttonCredits
+        // ], 
+        // this.pinkTween = this.tweens.add({
+        //     targets: this.pink,
+        //     x: { from: game.config.width, to: -this.pink.width},
+        //     ease: 'Sine.easeInOut',
+        //     duration: 2000,
+        //     repeat: 1,
+        //     onRepeat: function() {
+        //         this.pinkTween.duration -= 500;
+        //     },
+        //     onRepeatScope: this,
+        //     onComplete: function() {
+        //         this.pinkFinalTween.play();
+        //     },
+        //     onCompleteScope: this
+        // });
+        // this.pinkFinalTween = this.tweens.add({
+        //     targets: this.pink,
+        //     x: { from: game.config.width, to: -this.pink.width},
+        //     ease: 'Sine.easeInOut',
+        //     duration: 2000,
+        //     repeat: 3,
+        //     paused: true,
+        //     onRepeat: function() {
+        //         this.pinkTween.duration -= 500;
+        //     },
+        //     onRepeatScope: this,
+        //     onComplete: function() {
+        //         this.titleTween.play();
+        //     },
+        //     onCompleteScope: this
+        // });
+        // this.purpleTween = this.tweens.add({
+        //     targets: this.purple,
+        //     x: { from: game.config.width, to: -this.pink.width},
+        //     ease: 'Sine.easeInOut',
+        //     duration: 2500,
+        //     repeat: 1,
+        //     onRepeat: function() {
+        //         this.pinkTween.duration -= 500;
+        //     },
+        //     onRepeatScope: this,
+        //     onComplete: function() {
+        //         this.titleTween.play();
+        //     },
+        //     onCompleteScope: this
+        // });
     }
 }

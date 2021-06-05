@@ -57,14 +57,29 @@ class Load extends Phaser.Scene {
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //scene images
-        this.load.image("win-screen", "win-screen.png");
+        this.load.image("win-screen", "/menus/win_screen.png");
+        this.load.image("lose-screen", "/menus/lose_screen.png");
         this.load.atlas('info-screen', '/tutorial/tutorial.png', '/tutorial/tutorial.json',
         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('exit button', '/tutorial/exitButton.png', '/tutorial/exitButton.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        this.load.atlas('info button', '/tutorial/infoButton.png', '/tutorial/infoButton.json',
-                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('arrow button', '/tutorial/arrowButton.png', '/tutorial/arrowButton.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.image("a-game-by", "/menus/a_game_by.png");
+        this.load.image("alex-robert", "/menus/alex_robert.png");
+        this.load.image("birth-of-a-made-man", "/menus/birth_of_a_made_man.png");
+        this.load.image("fiona-hsu", "/menus/fiona_hsu.png");
+        this.load.image("white", "/menus/white.png");
+        this.load.image("pink", "/menus/light pink.png");
+        this.load.image("purple", "/menus/light purple.png");
+        this.load.image("thea-gamez", "/menus/thea_gamez.png");
+        this.load.image("turnip-throne", "/menus/turnip_throne.png");
+        this.load.image("turnip-title", "/menus/turnip_title.png");
+        this.load.atlas('credits', '/menus/credits.png', '/menus/credits.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('instructions', '/menus/instructions.png', '/menus/instructions.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('start-game', '/menus/start_game.png', '/menus/start_game.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //audio
