@@ -89,7 +89,7 @@ class Play extends Phaser.Scene {
             color: '#000000',
         }
         let pointsTextConfig = {
-            fontFamily: 'COWBOY JUNIOR',
+            fontFamily: 'font2',
             fontSize: '62px',
             color: '#843605',
             align: 'center',
