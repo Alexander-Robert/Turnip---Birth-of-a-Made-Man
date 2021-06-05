@@ -337,7 +337,6 @@ class BurrowState extends TurnipState {
                 }
             }
             if ((this.turnipUI.body.position.x < 350)){
-                console.log(this.turnipUI.body.position.x);
                 if (this.stats.crops > 0) {
                     this.stats.score += this.stats.crops * 5;
                     this.stats.crops = 0;

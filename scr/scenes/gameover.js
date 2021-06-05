@@ -33,13 +33,13 @@ class GameOver extends Phaser.Scene {
             escapes ${this.stats.escaped}
             `, textConfig).setOrigin(0.5);
         this.SPACEKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.Rkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        //this.Rkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     }
     update() {
-        if (Phaser.Input.Keyboard.JustDown(this.RKey)) {
-            this.scene.start("playScene");
-        }
-        else if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
+        // if (Phaser.Input.Keyboard.JustDown(this.RKey)) {
+        //     this.scene.start("playScene");
+        // }
+        if (Phaser.Input.Keyboard.JustDown(this.SPACEKey)) {
             this.scene.start("menuScene", [false]);
         }
     }

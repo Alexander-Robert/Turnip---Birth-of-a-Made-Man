@@ -114,22 +114,35 @@ class Play extends Phaser.Scene {
         }
 
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
-        this.lightHouse = this.add.sprite(1280, 0, "light house", 0).setOrigin(0);
+        this.lightHouse = this.add.sprite(1280, 0, "light house", 0).setOrigin(0).setDepth(this.terrainLayer.depth + 2);
         this.pescotti = this.add.sprite(20, 736, "pescotti pool").setOrigin(0).setScale(0.70);
         this.bag = this.add.sprite(943, 750, "bagbear", 0).setOrigin(0).setScale(0.65);
-        this.star = this.add.sprite(1300, 530, "star", 0).setOrigin(0.5,0);
+        this.star = this.add.sprite(1300, 530, "star", 0).setOrigin(0.5,0).setDepth(this.terrainLayer.depth + 3);
         this.crops = this.add.text(1085, 765, this.stats.crops, titleTextConfig);
         this.maxCrops = 10;
         this.add.text(1115, 790, this.maxCrops, titleTextConfig);
         this.add.text(1175, 825, "crops", titleTextConfig);
 
-        this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.lightHouse.depth);
+        this.delay = 3000;
+        this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.terrainLayer.depth + 1).setScale(3.2);
         this.winScreen.alpha = 0;
-        this.endScreenTween = this.tweens.add({
+        this.endScreenWinTween = this.tweens.add({
             targets: this.winScreen,
             x: {from: this.winScreen.x, to: 0},
             ease: 'Sine.easeInOut',
-            duration: 3500,
+            duration: this.delay,
+            paused: true,
+        });
+
+        this.loseScreen = this.add.sprite(0, 0, "lose-screen").setOrigin(0.5).setDepth(100).setScale(3.2);
+        this.loseScreen.x = this.loseScreen.displayWidth/2;
+        this.loseScreen.y = this.loseScreen.displayHeight/2;
+        this.loseScreen.alpha = 0;
+        this.endScreenLoseTween = this.tweens.add({
+            targets: this.loseScreen,
+            scale: {from: 0, to: 3.2},
+            ease: 'Sine.easeInOut',
+            duration: this.delay,
             paused: true,
         });
 
@@ -170,13 +183,13 @@ class Play extends Phaser.Scene {
 
         //text array for highlighting the current title
         this.titlesText = [];
-        this.titlesText.push(this.add.text(1420, 265, "Boss", titleTextConfig));
-        this.titlesText.push(this.add.text(1382, 310, "Consigliere", titleTextConfig));
-        this.titlesText.push(this.add.text(1385, 355, "Underboss", titleTextConfig));
-        this.titlesText.push(this.add.text(1375, 395, "Caporegime", titleTextConfig));
-        this.titlesText.push(this.add.text(1405, 440, "Soldier", titleTextConfig));
-        this.titlesText.push(this.add.text(1390, 485, "Associate", titleTextConfig));
-        this.titlesText.push(this.add.text(1395, 535, "Bag Man", titleTextConfig));
+        this.titlesText.push(this.add.text(1420, 265, "Boss", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1382, 310, "Consigliere", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1385, 355, "Underboss", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1375, 395, "Caporegime", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1405, 440, "Soldier", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1390, 485, "Associate", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        this.titlesText.push(this.add.text(1395, 535, "Bag Man", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
         
         //define the Finite State Machine (FSM) behaviors for the player
         this.turnipFSM = new StateMachine('idle', {
@@ -207,13 +220,21 @@ class Play extends Phaser.Scene {
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
 
+        //this.physics.world.collide(this.turnip, this.farmer, this.setLose(), null, this);
+
         if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
+            this.music.stop();
             this.scene.start("menuScene", [false]);
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.Hkey)) {
-            this.winScreen.alpha = 1;
-            this.endScreenTween.play();
+            // this.winScreen.alpha = 1;
+            // this.endScreenWinTween.play();
+            this.loseScreen.alpha = 1;
+            this.endScreenLoseTween.play();
+            this.time.delayedCall(this.delay, () => {
+                this.transitionGameOver();
+            }, null, this);
         }
 
         //TODO: can use farmer's info to see what type of crop he's closest to
@@ -296,8 +317,32 @@ class Play extends Phaser.Scene {
         //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
         //can also: restart game or back to main menu)
         if (loseCondition) {
-            this.scene.start("gameOverScene", this.stats);
+            if(!this.endScreenLoseTween.isPlaying()){
+                this.loseScreen.alpha = 1;
+                this.endScreenloseTween.play();
+                this.time.delayedCall(this.delay, () => {
+                    this.transitionGameOver();
+                }, null, this);
+            }
         }
+        let winCondition = false; //= this.stats.score == 500;
+        if (winCondition) {
+            if(!this.endScreenWinTween.isPlaying()){
+            this.winScreen.alpha = 1;
+            this.endScreenWinTween.play();
+            this.time.delayedCall(this.delay, () => {
+                this.transitionGameOver();
+            }, null, this);
+            }
+        }
+    }
+
+    setLose() {
+        this.loseCondition = true;
+    }
+    transitionGameOver() {
+        this.music.stop();
+        this.scene.start("gameOverScene", this.stats);
     }
 
     titleRankUp(yValue, title) {
