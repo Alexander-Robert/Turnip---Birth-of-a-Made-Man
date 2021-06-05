@@ -3,6 +3,18 @@ class Load extends Phaser.Scene {
         super("loadScene");
     }
     preload() {
+        // loading bar
+        // see: https://rexrainbow.github.io/phaser3-rex-notes/docs/site/loader/
+        let loadingBar = this.add.graphics();
+        this.load.on('progress', (value) => {
+            loadingBar.clear();                                 // reset fill/line style
+            loadingBar.fillStyle(0xFFFFFF, 1);                  // (color, alpha)
+            loadingBar.fillRect((game.config.width / 4), game.config.height / 2, (game.config.width / 2) * value, 5);  // (x, y, w, h)
+        });
+        this.load.on('complete', () => {
+            loadingBar.destroy();
+        });
+
         this.load.path = "./assets/";
         //turnip assets //NOTE: space is idle image, _ is atlas
         this.load.image("turnip up",    "/turnip/turnip back.png");
@@ -98,6 +110,12 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
-        this.scene.start("menuScene", [true]);
+         // check for local storage browser support
+         if(window.localStorage) {
+            console.log('Local storage supported');
+        } else {
+            console.warn('Local storage not supported');
+        }
+        this.scene.start("menuScene", [false]);
     }
 }

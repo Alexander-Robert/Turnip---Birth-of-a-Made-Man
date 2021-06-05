@@ -2,11 +2,31 @@ class Play extends Phaser.Scene {
     constructor() {
         super("playScene");
     }
+    init(playtweens) {
+        this.playtweens = playtweens[0];
+    }
     create() {
         console.log("created playScene!");
-
-        this.music = this.sound.add('music', {volume: 0.2}, { loop: true }, );
+        
+        this.music = this.sound.add('music', { volume: 0.2 }, { loop: true },);
         this.music.play();
+        this.transitionComplete = true;
+
+        if (this.playtweens) {
+            let menuImage = this.add.image(0, 0, 'titlesnapshot').setOrigin(0).setDepth(1000);
+            this.transitionComplete = false;
+            this.tweens.add({
+                targets: menuImage,
+                duration: 2500,
+                ease: 'Back.easeInOut',
+                x: { from: menuImage.x, to: -menuImage.width },
+                onComplete: function () {
+                    this.transitionComplete = true;
+                },
+                onCompleteScope: this
+            });
+        }
+
 
         //define key inputs
         //NOTE: keys must be defined before turnipFSM 
@@ -17,6 +37,7 @@ class Play extends Phaser.Scene {
         this.keys.Skey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.keys.restart = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
         this.Hkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
 
@@ -174,6 +195,9 @@ class Play extends Phaser.Scene {
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
 
+        if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
+            this.scene.start("menuScene", [false]);
+        }
 
         if (Phaser.Input.Keyboard.JustDown(this.Hkey)) {
             this.winScreen.alpha = 1;

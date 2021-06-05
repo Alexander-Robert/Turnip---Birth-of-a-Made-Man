@@ -64,7 +64,7 @@ class Menu extends Phaser.Scene {
         
         this.tutorialGroup = this.add.group({});
         this.infoScreen = this.add.image(0,0, 'info-screen', 0).setOrigin(0);
-        this.infoScreen.lastFrame = 9; //couldn't find phaser method to find final frame so it's hardcoded
+        this.infoScreen.lastFrame = 10; //couldn't find phaser method to find final frame so it's hardcoded
 
         this.tutorialGroup.add(this.infoScreen);
         this.tutorialGroup.add(this.buttonExit);
@@ -75,6 +75,8 @@ class Menu extends Phaser.Scene {
         this.start = false;
 
         this.tutorialText = [];
+        this.tutorialText.push(this.add.text(100, 120,
+            "Use these buttons to navigate the instructions", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
             "This is what the game looks like\nLet's start with the basics", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
@@ -98,8 +100,24 @@ class Menu extends Phaser.Scene {
     }
 
     update() {
-        if(this.start)
-            this.scene.start("playScene");
+        if(this.start){
+            //take a picture of the menu screen so we can tween it in the play scene
+            let textureManager = this.textures;
+            // take snapshot of the entire game viewport
+            // https://newdocs.phaser.io/docs/3.54.0/Phaser.Renderer.WebGL.WebGLRenderer#snapshot
+            // .snapshot(callback, type, encoderOptions)
+            this.game.renderer.snapshot((image) => {
+                // make sure an existing texture w/ that key doesn't already exist
+                if(textureManager.exists('titlesnapshot')) {
+                    textureManager.remove('titlesnapshot');
+                }
+                // take the snapshot img returned from callback and add to texture manager
+                textureManager.addImage('titlesnapshot', image);
+            });
+            
+            // start next scene
+            this.scene.start("playScene", [true]);
+        }
 
         if(this.tutorial) {
             this.tutorialGroup.setVisible(1);
