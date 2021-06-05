@@ -274,6 +274,14 @@ class BurrowState extends TurnipState {
         this.stateMachine.setInfo("burrowing");
 
         audios.dig.play();
+        var OceanisPaused = audios.ocean.isPaused;
+        if (OceanisPaused == true) {
+            audios.ocean.resume();
+        }
+        else {
+            audios.ocean.play();
+        }
+        
         // handle animation
         this.holeIndex = this.findHole(tile);
         this.stateMachine.setInfo("burrowing", this.holes[this.holeIndex]);
