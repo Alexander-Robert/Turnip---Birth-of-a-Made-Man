@@ -23,6 +23,7 @@ class Load extends Phaser.Scene {
         this.load.audio("harvest", "rustle.ogg");
         this.load.audio("dig", "dig.wav");
         this.load.audio("sell", "cha-ching.wav");
+        this.load.audio("ocean_waves", "ocean_waves.wav");
         this.load.audio("music", "melodie.mp3");
 
         this.load.spritesheet("object_set", "objects.png", {

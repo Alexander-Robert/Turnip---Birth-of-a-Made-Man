@@ -246,7 +246,16 @@ class BurrowState extends TurnipState {
     enter(scene, turnip, audios, field, tile) {
         turnip.body.setVelocity(0);
         this.stateMachine.setInfo("burrowing");
+
         audios.dig.play();
+        var OceanisPaused = audios.ocean.isPaused;
+        if (OceanisPaused == true) {
+            audios.ocean.resume();
+        }
+        else {
+            audios.ocean.play();
+        }
+        
         //play burrow animation
         //on animation complete
         //make turnip invisible
@@ -282,9 +291,11 @@ class BurrowState extends TurnipState {
                 }
             }
             if ((this.turnipUI.body.position.x < 250)){
-                this.stats.score += this.stats.crops * 5;
-                this.stats.crops = 0;
-                audios.sell.play();
+                if (this.stats.crops > 0) {
+                    this.stats.score += this.stats.crops * 5;
+                    this.stats.crops = 0;
+                    audios.sell.play();
+                }
             }
             //check type of tile turnip is on.
             //If the type is an interactible tile, 
@@ -319,6 +330,8 @@ class BurrowState extends TurnipState {
         //play an exit burrow animation
         //make turnip visible again
         audios.dig.play();
+        audios.ocean.pause();
+        
         turnip.alpha = 1;
 
         this.turnipUI.body.setVelocityX(0);
