@@ -93,6 +93,10 @@ class Load extends Phaser.Scene {
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('start-game', '/menus/start_game.png', '/menus/start_game.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('home', '/menus/home.png', '/menus/home.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('restart', '/menus/restart.png', '/menus/restart.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //audio
         this.load.audio("running", "running.wav");

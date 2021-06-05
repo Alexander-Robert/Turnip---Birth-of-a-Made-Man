@@ -124,7 +124,7 @@ class Play extends Phaser.Scene {
         this.add.text(1175, 825, "crops", titleTextConfig);
 
         this.delay = 3000;
-        this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.terrainLayer.depth + 1).setScale(3.2);
+        this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.terrainLayer.depth + 1);
         this.winScreen.alpha = 0;
         this.endScreenWinTween = this.tweens.add({
             targets: this.winScreen,
@@ -134,13 +134,14 @@ class Play extends Phaser.Scene {
             paused: true,
         });
 
-        this.loseScreen = this.add.sprite(0, 0, "lose-screen").setOrigin(0.5).setDepth(100).setScale(3.2);
+        this.loseScreen = this.add.sprite(0, 0, "lose-screen").setOrigin(0.5).setDepth(100);
         this.loseScreen.x = this.loseScreen.displayWidth/2;
         this.loseScreen.y = this.loseScreen.displayHeight/2;
         this.loseScreen.alpha = 0;
         this.endScreenLoseTween = this.tweens.add({
             targets: this.loseScreen,
-            scale: {from: 0, to: 3.2},
+            scale: {from: 0, to: 1},
+            alpha: {from: 0, to: 1},
             ease: 'Sine.easeInOut',
             duration: this.delay,
             paused: true,
@@ -220,7 +221,7 @@ class Play extends Phaser.Scene {
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
 
-        //this.physics.world.collide(this.turnip, this.farmer, this.setLose(), null, this);
+       //this.physics.world.collide(this.turnip, this.farmer, this.playLoseAnimation(), null, this);
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
             this.music.stop();
@@ -228,13 +229,12 @@ class Play extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.Hkey)) {
+            this.playLoseAnimation();
             // this.winScreen.alpha = 1;
             // this.endScreenWinTween.play();
-            this.loseScreen.alpha = 1;
-            this.endScreenLoseTween.play();
-            this.time.delayedCall(this.delay, () => {
-                this.transitionGameOver();
-            }, null, this);
+            // this.time.delayedCall(this.delay, () => {
+            //     this.transitionGameOver();
+            // }, null, this);
         }
 
         //TODO: can use farmer's info to see what type of crop he's closest to
@@ -317,15 +317,9 @@ class Play extends Phaser.Scene {
         //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
         //can also: restart game or back to main menu)
         if (loseCondition) {
-            if(!this.endScreenLoseTween.isPlaying()){
-                this.loseScreen.alpha = 1;
-                this.endScreenloseTween.play();
-                this.time.delayedCall(this.delay, () => {
-                    this.transitionGameOver();
-                }, null, this);
-            }
+            this.playLoseAnimation();
         }
-        let winCondition = false; //= this.stats.score == 500;
+        let winCondition = (this.stats.score >= 300);
         if (winCondition) {
             if(!this.endScreenWinTween.isPlaying()){
             this.winScreen.alpha = 1;
@@ -337,8 +331,13 @@ class Play extends Phaser.Scene {
         }
     }
 
-    setLose() {
-        this.loseCondition = true;
+    playLoseAnimation() {
+        if(!this.endScreenLoseTween.isPlaying()) {
+            this.endScreenLoseTween.play();
+            this.time.delayedCall(this.delay, () => {
+                this.transitionGameOver();
+            }, null, this);
+        }
     }
     transitionGameOver() {
         this.music.stop();
