@@ -77,6 +77,7 @@ class Play extends Phaser.Scene {
         this.stats = {
             score: 0,
             crops: 0,
+            maxCrops: 10,
             totalCrops: 0,
             escaped: 0,
             title: "Bag Man"
@@ -197,9 +198,9 @@ class Play extends Phaser.Scene {
             idle: new IdleState(this),
             move: new MoveState(this, this.turnip),
             //TODO: make steal and burrow state spawn/delete crops in bag UI respectively. 
-            steal: new StealState(this, this.stats, this.maxCrops),
-            burrow: new BurrowState(this, this.stats, this.holes, this.pescotti),
-        }, [this, this.turnip, this.audios, field]);
+            steal: new StealState(this, this.maxCrops),
+            burrow: new BurrowState(this, this.holes, this.pescotti),
+        }, [this, this.turnip, this.audios, field, this.stats]);
 
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {

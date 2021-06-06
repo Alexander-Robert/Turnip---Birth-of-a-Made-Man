@@ -120,15 +120,17 @@ class IdleState extends TurnipState {
         turnip.setTexture('turnip down');
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         //check for transitions
         //if the interact key is pressed
         if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
-                this.stateMachine.transition('steal', tileInfo);
-                return;
+                if (stats.crops != stats.maxCrops) {
+                    this.stateMachine.transition('steal', tileInfo);
+                    return;
+                }
             }
 
             if (tileInfo.name == "hole") {
@@ -152,15 +154,17 @@ class MoveState extends TurnipState {
     enter(scene, turnip, audios) {
         audios.running.play();
     }
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         //check for transitions
         //if the interact key is pressed 
         if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
-                this.stateMachine.transition('steal', tileInfo);
-                return;
+                if (stats.crops != stats.maxCrops){
+                    this.stateMachine.transition('steal', tileInfo);
+                    return;
+                }
             }
 
             if (tileInfo.name == "hole") {
@@ -212,31 +216,23 @@ class MoveState extends TurnipState {
 }
 
 class StealState extends TurnipState {
-    constructor(scene, stats, maxCrops) {
+    constructor(scene) {
         super(scene);
-        this.stats = stats;
         this.tileInfo;
-        this.maxCrops = maxCrops;
     }
 
-    enter(scene, turnip, audios, field, tileInfo) {
-        if (this.stats.crops == this.maxCrops)
-            return;
+    enter(scene, turnip, audios, field, stats, tileInfo) {
         this.tileInfo = tileInfo;
         //play stealing animation
         audios.harvest.play();
         this.stateMachine.setInfo("stealing");
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         if (this.stateMachine.transitioning) return;
-        if (this.stats.crops == this.maxCrops) {
-            this.stateMachine.transition("idle");
-            return "steal";
-        }
         //on animation complete
-        this.stats.crops++;
-        this.stats.totalCrops++;
+        stats.crops++;
+        stats.totalCrops++;
         //TODO: have it spawn a crop falling into the UI bag display
         field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);
         this.stateMachine.transition("idle");
@@ -245,7 +241,7 @@ class StealState extends TurnipState {
 }
 
 class BurrowState extends TurnipState {
-    constructor(scene, stats, holes, pescotti) {
+    constructor(scene, holes, pescotti) {
         super(scene);
         this.turnipUI = scene.physics.add.sprite(800, 810, 'turnip-enter', 0).setSize(0.6);
         // let fixImage = (turnipUI) => {
@@ -264,7 +260,6 @@ class BurrowState extends TurnipState {
         // });
         this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
-        this.stats = stats;
         this.holes = holes;
         this.pescotti = pescotti;
     }
@@ -302,7 +297,7 @@ class BurrowState extends TurnipState {
         });
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         if (this.stateMachine.transitioning) return;
         this.stateMachine.setInfo("none");
         if ((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
@@ -337,9 +332,9 @@ class BurrowState extends TurnipState {
                 }
             }
             if ((this.turnipUI.body.position.x < 350)){
-                if (this.stats.crops > 0) {
-                    this.stats.score += this.stats.crops * 5;
-                    this.stats.crops = 0;
+                if (stats.crops > 0) {
+                    stats.score += stats.crops * 5;
+                    stats.crops = 0;
                     audios.sell.play();
                 }
             }

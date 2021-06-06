@@ -381,7 +381,6 @@ class ChaseState extends FarmerState {
                     //keep chasing him with shorter delay
                     scene.time.delayedCall(100, () => {
                         if (!farmer.isFollowing()) {
-                            this.stats.escaped++;
                             scene.time.removeAllEvents();
                             this.stateMachine.transition("chase", 500);
                             return;
@@ -396,6 +395,7 @@ class ChaseState extends FarmerState {
                 if (!farmer.isFollowing()) {
                     scene.time.removeAllEvents();
                     //reuse the looking around part of search
+                    this.stats.escaped++;
                     this.stateMachine.transition("search", undefined, true); 
                     return;
                 }
