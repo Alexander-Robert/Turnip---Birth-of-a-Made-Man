@@ -5,9 +5,7 @@ class Play extends Phaser.Scene {
     init(playtweens) { //check if we want to intro tween the previous screen snapshot
         this.playtweens = playtweens[0]; //I think this happens to be always true?
     }
-    create() {
-        console.log("created playScene!");
-        
+    create() {        
         this.music = this.sound.add('music', { volume: 0.2 }, { loop: true });
         this.music.play();
 

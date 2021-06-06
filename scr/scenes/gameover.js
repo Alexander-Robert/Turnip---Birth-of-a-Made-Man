@@ -4,7 +4,6 @@ class GameOver extends Phaser.Scene {
     }
     init(data) { //get the game stats
         this.stats = data;
-        console.log(this.stats);
     }
     create() {
         //text configuration

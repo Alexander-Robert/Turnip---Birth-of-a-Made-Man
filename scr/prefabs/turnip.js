@@ -91,8 +91,6 @@ class TurnipState extends State {
             case 8:
                 return { tile: tile, name: "hole" };
             default:
-                // console.warn("found some other tile not listed");
-                // console.log(tile);
                 return { tile: tile, name: "other" };
         }
     }
