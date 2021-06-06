@@ -12,7 +12,6 @@ class GameOver extends Phaser.Scene {
             fontSize: '48px',
             color: '#000000',
             align: 'center',
-            wordWrap: { width: 300, useAdvancedWrap: true },
             padding: {
                 top: 5,
                 bottom: 5,

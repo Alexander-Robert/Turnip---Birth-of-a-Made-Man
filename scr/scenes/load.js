@@ -117,6 +117,6 @@ class Load extends Phaser.Scene {
     }
     create() {
         //starting menuScene with true indicates to play the intro tween
-        this.scene.start("menuScene", [false]);
+        this.scene.start("menuScene", [true]);
     }
 }
