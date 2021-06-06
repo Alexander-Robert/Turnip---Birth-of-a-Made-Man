@@ -2,15 +2,17 @@ class Menu extends Phaser.Scene {
     constructor () {
         super("menuScene");
     }
-    init(playtweens) {
-        this.playtweens = playtweens[0];
+    init(playtweens) { //check if we need want to play the intro animation or not
+        //requires to be put in an array 
+        //because Javascript or Phaser doesn't like passing the raw value between scenes
+        this.playtweens = playtweens[0]; //is either given true or false
     }
     create(){
         //background menu images
         this.white               = this.add.image(0, 0, "white").setOrigin(0);
         this.pink                = this.add.image(0, 0, "pink").setOrigin(0);
         this.purple              = this.add.image(375, 0, "purple").setOrigin(0);
-        ///create all menu images
+        ///create all menu component images
         this.a_game_by           = this.add.image(1080, 60, "a-game-by").setOrigin(0);
         this.alex_robert         = this.add.image(775, 130, "alex-robert").setOrigin(0);
         this.birth_of_a_made_man = this.add.image(420, 70, "birth-of-a-made-man").setOrigin(0);
@@ -46,14 +48,15 @@ class Menu extends Phaser.Scene {
             this.alex_robert.alpha = 0;
             this.turnip_title.alpha = 0;
 
-            //create tweens for images
+            //create tweens for images (this starts the long intro loading animation 
+            //+ calls initializeButtons at the end of the intro)
             this.createTweens();
         }
-        else { //if we don't want to play the intro, then create button's functionality
+        else { //if we don't want to play the intro, then create button's functionality immediately
             this.initializeButtons();
         }
 
-        //text configuration
+        //text configuration (for instructions)
         let textConfig = {
             fontFamily: 'Courier',
             fontSize: '36px',
@@ -62,6 +65,7 @@ class Menu extends Phaser.Scene {
             align: 'center',
         }
         
+        //creates a group to put all instruction image objects in for easy visibility switching
         this.tutorialGroup = this.add.group({});
         this.infoScreen = this.add.image(0,0, 'info-screen', 0).setOrigin(0);
         this.infoScreen.lastFrame = 10; //couldn't find phaser method to find final frame so it's hardcoded
@@ -72,9 +76,10 @@ class Menu extends Phaser.Scene {
         this.tutorialGroup.add(this.buttonRightArrow);
         this.tutorialGroup.setVisible(0);
         this.tutorial = false; //bool for displaying game info screen
-        this.start = false;
+        this.start = false; //bool for starting the game
 
-        this.tutorialText = [];
+        this.tutorialText = []; //used to match text with corresponding instruction image frame
+                                //NOTE: dependant on the total intruction image frame numbers
         this.tutorialText.push(this.add.text(100, 120,
             "Use these buttons to navigate the instructions", textConfig));
         this.tutorialText.push(this.add.text(150, 190,
@@ -101,7 +106,7 @@ class Menu extends Phaser.Scene {
 
     update() {
         if(this.start){
-            //take a picture of the menu screen so we can tween it in the play scene
+            //take a picture of the menu scene so we can tween it in the play scene
             let textureManager = this.textures;
             // take snapshot of the entire game viewport
             // https://newdocs.phaser.io/docs/3.54.0/Phaser.Renderer.WebGL.WebGLRenderer#snapshot
@@ -115,21 +120,22 @@ class Menu extends Phaser.Scene {
                 textureManager.addImage('titlesnapshot', image);
             });
             
-            // start next scene
+            // start play scene
             this.scene.start("playScene", [true]);
         }
 
-        if(this.tutorial) {
+        if(this.tutorial) { //if we're looking at the tutorial
             this.tutorialGroup.setVisible(1);
             for(let i = 0; i < this.tutorialText.length; ++i) {
-                if(i == parseInt(this.infoScreen.frame.name)) {
-                    this.tutorialText[i].alpha = 1;
+                //if we're on the corresponding tutorial image frame
+                if(i == parseInt(this.infoScreen.frame.name)) { 
+                    this.tutorialText[i].alpha = 1; //then enable the text for that page
                 }
                 else
                     this.tutorialText[i].alpha = 0;
             }
         }
-        else {
+        else { //otherwise hide all tutorial assets
             this.tutorialGroup.setVisible(0);
             for(let i = 0; i < this.tutorialText.length; ++i)
                     this.tutorialText[i].alpha = 0;
@@ -141,8 +147,10 @@ class Menu extends Phaser.Scene {
         //define specific button click methods
         //function requires us to pass the wrapper(i.e. the scene) of the tutorial property
         //because Javascript does not pass by reference!
+        //this is why it's easier to handle simple bools 
+        //instead of handling the actual implementation within most click methods
         this.buttonStart.click = function (scene) {
-            scene.start = true;
+            scene.start = true; 
         };
         this.buttonCredits.click = function (scene) {
             //scene.credits.alpha = (scene.credits.alpha) ? 0 : 1; 
@@ -168,7 +176,7 @@ class Menu extends Phaser.Scene {
                 scene.infoScreen.setFrame(0);
             
         };
-        //define interactibility will all buttons
+        //define interactibility will all buttons with in the this.buttons array
         for (let button of this.buttons) {
             button.setInteractive({
                 useHandCurson: true,
@@ -189,6 +197,8 @@ class Menu extends Phaser.Scene {
         }
     }
 
+    //the rest of this file is defining a long series of tweens that call one another
+    //to create the amazing (*pat's self on back*) intro cutscene 
     createTweens() {
         this.pinkTween = this.tweens.add({
             targets: this.pink,
@@ -263,7 +273,10 @@ class Menu extends Phaser.Scene {
             ease: 'Cubic.easeOut',
             duration: 3000,
             paused: true,
-            onComplete: function() {
+            onComplete: function() { 
+                //NOTE: phaser doesn't like calling several tweens at once
+                //before I tried to tween their current values which make things jittery
+                //using compile time calculable values helped solve this issue.
                 this.throneLeftTween.play();
                 this.titleLeftTween.play();
                 this.titleNameLeftTween.play();
@@ -277,7 +290,6 @@ class Menu extends Phaser.Scene {
             x: { from: this.turnip_throne.x, to: 180},
             ease: 'Sine.easeInOut',
             duration: 1250,
-            //delay: 1000,
             paused: true,
         });
         this.titleLeftTween = this.tweens.add({
@@ -285,7 +297,6 @@ class Menu extends Phaser.Scene {
             x: { from: this.turnip_title.x, to: 64},
             ease: 'Sine.easeInOut',
             duration: 1250,
-            //delay: 1000,
             paused: true,
         });
         this.titleNameLeftTween = this.tweens.add({
@@ -293,7 +304,6 @@ class Menu extends Phaser.Scene {
             x: { from: this.birth_of_a_made_man.x, to: 420},
             ease: 'Sine.easeInOut',
             duration: 1250,
-            //delay: 1000,
             paused: true,
         });
         this.pinkLeftTween = this.tweens.add({
@@ -301,7 +311,6 @@ class Menu extends Phaser.Scene {
             x: { from: (game.config.width / 2) - this.pink.width, to: 0},
             ease: 'Sine.easeInOut',
             duration: 1250,
-            //delay: 1000,
             paused: true,
         });
         this.purpleLeftTween = this.tweens.add({
@@ -309,7 +318,6 @@ class Menu extends Phaser.Scene {
             x: { from: (game.config.width / 2), to: this.purple.width},
             ease: 'Sine.easeInOut',
             duration: 1250,
-            //delay: 1000,
             paused: true,
             onComplete: function() {
                 this.aGameByTween.play();
@@ -388,7 +396,6 @@ class Menu extends Phaser.Scene {
             },
             onCompleteScope: this
         });
-        
-
+        //wow that was a lot of tweens!
     }
 }

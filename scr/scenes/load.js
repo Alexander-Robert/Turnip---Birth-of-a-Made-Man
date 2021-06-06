@@ -56,18 +56,18 @@ class Load extends Phaser.Scene {
         this.load.image("pescotti sale", "/pescotti/pescotti_sale.png");
         this.load.atlas('poof', '/pescotti/poof.png', '/pescotti/poof.json', 
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        this.load.atlas('bagbear', '/pescotti/bagbear.png', '/pescotti/bagbear.json', 
-                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        
         //other UI assets
         this.load.image("hole", "hole.png");
         this.load.image("covered hole", "covered hole.png");
         this.load.image("shopUI", "shopUI.png");
-        this.load.image("field_set", "tileset.png");
         this.load.image("star", "star.png");
         this.load.atlas('light house', 'lightup.png', 'lightup.json', 
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('bagbear', '/pescotti/bagbear.png', '/pescotti/bagbear.json', 
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
-        //scene images
+        //scene images (includes button images)
         this.load.image("win-screen", "/menus/win_screen.png");
         this.load.image("lose-screen", "/menus/lose_screen.png");
         this.load.atlas('info-screen', '/tutorial/tutorial.png', '/tutorial/tutorial.json',
@@ -76,6 +76,12 @@ class Load extends Phaser.Scene {
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('arrow button', '/tutorial/arrowButton.png', '/tutorial/arrowButton.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('home', '/menus/home.png', '/menus/home.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('restart', '/menus/restart.png', '/menus/restart.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        
+        //individual components of intro scene images
         this.load.image("a-game-by", "/menus/a_game_by.png");
         this.load.image("alex-robert", "/menus/alex_robert.png");
         this.load.image("birth-of-a-made-man", "/menus/birth_of_a_made_man.png");
@@ -92,10 +98,6 @@ class Load extends Phaser.Scene {
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('start-game', '/menus/start_game.png', '/menus/start_game.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        this.load.atlas('home', '/menus/home.png', '/menus/home.json',
-                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        this.load.atlas('restart', '/menus/restart.png', '/menus/restart.json',
-                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
         //audio
         this.load.audio("running", "running.wav");
@@ -106,6 +108,7 @@ class Load extends Phaser.Scene {
         this.load.audio("music", "melodie.mp3");
 
         //tilemap assets
+        this.load.image("field_set", "tileset.png");
         this.load.spritesheet("object_set", "objects.png", {
             frameWidth: 32,
             frameHeight: 32
@@ -113,6 +116,7 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
+        //starting menuScene with true indicates to play the intro tween
         this.scene.start("menuScene", [false]);
     }
 }

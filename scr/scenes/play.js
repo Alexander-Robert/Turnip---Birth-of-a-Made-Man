@@ -2,31 +2,24 @@ class Play extends Phaser.Scene {
     constructor() {
         super("playScene");
     }
-    init(playtweens) {
-        this.playtweens = playtweens[0];
+    init(playtweens) { //check if we want to intro tween the previous screen snapshot
+        this.playtweens = playtweens[0]; //I think this happens to be always true?
     }
     create() {
         console.log("created playScene!");
         
-        this.music = this.sound.add('music', { volume: 0.2 }, { loop: true },);
+        this.music = this.sound.add('music', { volume: 0.2 }, { loop: true });
         this.music.play();
-        this.transitionComplete = true;
 
         if (this.playtweens) {
             let menuImage = this.add.image(0, 0, 'titlesnapshot').setOrigin(0).setDepth(1000);
-            this.transitionComplete = false;
             this.tweens.add({
                 targets: menuImage,
                 duration: 2500,
                 ease: 'Back.easeInOut',
                 x: { from: menuImage.x, to: -menuImage.width },
-                onComplete: function () {
-                    this.transitionComplete = true;
-                },
-                onCompleteScope: this
             });
         }
-
 
         //define key inputs
         //NOTE: keys must be defined before turnipFSM 
@@ -37,10 +30,11 @@ class Play extends Phaser.Scene {
         this.keys.Skey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.keys.Dkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.keys.restart = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-
-        this.Tkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
-        this.Ykey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+        
+        //special keys for devs or graders to use.
+        this.restart = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        this.loseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+        this.winKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
 
         //create audios object of different audios
         this.createAudio();
@@ -62,19 +56,19 @@ class Play extends Phaser.Scene {
         this.turnip = new Turnip(this, 1000, 300, "turnip down", 0, 'down').setScale(0.25);
 
         //create out farmer AI (defined as a path follower which extends sprites)
-        let emptyPath = this.add.path();
+        let emptyPath = this.add.path(); //which is why we pass it an empty path
         this.farmer = new Farmer(this, emptyPath, 500, 500, 'farmer down', 0, 'down').setScale(0.1);
 
         //bundle all this.anims.create statements into a separate function
         this.createAnimations();
 
-        //set collisions
+        //set collisions for turnip and specific tilemap layers
         this.backgroundLayer.setCollision([4, 5]);
         this.terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
-        //this.physics.add.collider(this.turnip, this.farmer, () => {this.playLoseAnimation();}, null, this);
 
+        //bool to ensure game over transition tweens and code plays once
         this.locked = false;
 
         //define stats
@@ -86,7 +80,9 @@ class Play extends Phaser.Scene {
             escaped: 0,
             title: "Bag Man"
         };
-        this.oldScore = this.stats.score;
+        this.oldScore = this.stats.score; //used to check diff when game updates the score
+        //a tween for values! Creates a nice eased counter when selling things at the shop
+        //this binding gets reassigned later because of how tweens resist runtime value calculations
         this.easedcounter = this.tweens.addCounter({
             from: this.oldScore,
             to: this.stats.score,
@@ -99,12 +95,13 @@ class Play extends Phaser.Scene {
             onCompleteScope: this
         });
 
-        //text configuration
+        //text configuration for all the mob titles and UI text
         let titleTextConfig = {
             fontFamily: 'font1',
             fontSize: '32px',
             color: '#000000',
         }
+        //text configuration for reputation counter only
         let pointsTextConfig = {
             fontFamily: 'font2',
             fontSize: '62px',
@@ -118,6 +115,10 @@ class Play extends Phaser.Scene {
             fixedWidth: 0
         }
 
+        //define the UI images and text
+        //many things are set to a specific depth to allow properly layering for game over transitions
+        //it was much easier to do that than move definitions within the create method to have the correct layering
+        //while also not breaking the code that requires it's definition.
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0);
         this.lightHouse = this.add.sprite(1280, 0, "light house", 0).setOrigin(0).setDepth(this.terrainLayer.depth + 2);
         this.pescotti = this.add.sprite(20, 736, "pescotti pool").setOrigin(0).setScale(0.70);
@@ -128,7 +129,8 @@ class Play extends Phaser.Scene {
         this.add.text(1115, 790, this.maxCrops, titleTextConfig);
         this.add.text(1175, 825, "crops", titleTextConfig);
 
-        this.delay = 3000;
+        this.delay = 3000; //a binding to get game over tweens transitions to work properly
+        //defining win and lose screen images tweens and values.
         this.winScreen = this.add.sprite(1280, 0, "win-screen").setOrigin(0).setDepth(this.terrainLayer.depth + 1);
         this.winScreen.alpha = 0;
         this.endScreenWinTween = this.tweens.add({
@@ -152,6 +154,7 @@ class Play extends Phaser.Scene {
             paused: true,
         });
 
+        //one of the two star tweens when you rank up to a new title
         this.starTweenGrow = this.tweens.add({
             targets: this.star,
             scale: {from: 1, to: 5},
@@ -172,7 +175,10 @@ class Play extends Phaser.Scene {
             let foundHole = field.findByIndex(8, numberOfHoles);
             if (foundHole == null) break;
             numberOfHoles++;
-            this.holes.push({
+            this.holes.push({ 
+                //this is the hole object properties definition
+                //NOTE: sprite corresponds to the UI sprite
+                    //while location corresponds to the in game tile position (in tile coordinates)
                 sprite: null,
                 location: {
                     x: foundHole.x,
@@ -181,87 +187,70 @@ class Play extends Phaser.Scene {
             })
         }
         for (let i = 0; i < this.holes.length; i++) {
+            //NOTE: while this code allows scalable hole connections, 
+                //it doesn't handle scaleability for screen image placement
             this.holes[i].sprite = this.add.sprite(550 + (150 * i), 800, "hole").setScale(0.6);
-            this.holes[i].sprite.setScrollFactor(0);
         }
 
         this.scoreText = this.add.text(1290, 755, "Reputation " + this.stats.score, pointsTextConfig);
 
-        //text array for highlighting the current title
-        this.titlesText = [];
-        this.titlesText.push(this.add.text(1420, 265, "Boss", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1382, 310, "Consigliere", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1385, 355, "Underboss", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1375, 395, "Caporegime", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1405, 440, "Soldier", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1390, 485, "Associate", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
-        this.titlesText.push(this.add.text(1395, 535, "Bag Man", titleTextConfig).setDepth(this.terrainLayer.depth + 3));
+        //all the text for the different titles
+        this.add.text(1420, 265, "Boss", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1382, 310, "Consigliere", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1385, 355, "Underboss", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1375, 395, "Caporegime", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1405, 440, "Soldier", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1390, 485, "Associate", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
+        this.add.text(1395, 535, "Bag Man", titleTextConfig).setDepth(this.terrainLayer.depth + 3);
         
-        //define the Finite State Machine (FSM) behaviors for the player
+        //define the Finite State Machine (FSM) behaviors for the player (turnip)
+        //NOTE: both finite state machines allow specific things to be passed in the class constructors
+            //which simplifies the method parameters when only one or a few states require a specific binding
         this.turnipFSM = new StateMachine('idle', {
             idle: new IdleState(this),
             move: new MoveState(this, this.turnip),
-            //TODO: make steal and burrow state spawn/delete crops in bag UI respectively. 
             steal: new StealState(this, this.maxCrops),
             burrow: new BurrowState(this, this.holes, this.pescotti),
         }, [this, this.turnip, this.audios, field, this.stats]);
 
         //define the Finite State Machine (FSM) behaviors for the farmer AI
+        //NOTE: this FSM REQUIRES this, this.farmer to be passed to the constructor 
+            //(see why in FarmerState class in farmer.js)
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this, this.farmer),
-            lookAround: new LookState(this, this.farmer),
-            chase: new ChaseState(this, this.farmer, this.stats),
+            lookAround: new LookState(this, this.farmer, this.stats),
+            chase: new ChaseState(this, this.farmer),
             findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
             bury: new BuryState(this, this.farmer, field),
         }, [this, this.farmer, this.audios, this.turnip]);
-
-        //TODO: remove when farmer AI is complete
-        //checker for printing states whenever the state changes
-        this.savedState = 'walk';
     }
 
     update() {
         //process current step within the turnipFSM and farmerFSM
-        let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
-        let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
+        //step returns the return value of execute methods
+        let turnipStep = this.turnipFSM.step(); 
+        //farmer gets info from specific events given by the turnipFSM (i.e. actions/noises made by turnip)
+        this.farmerFSM.step(this.turnipFSM.getInfo());
 
-        if(!this.locked) {
-            this.physics.world.collide(this.turnip, this.farmer, (turnip) => {
-                console.log("collision");
-                turnip.body.setEnable(false);
-                this.loseScreen.alpha = 1;
-                this.transitionGameOver();
-            }, null, this);
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
+        //dev/grader keybinds to check different scenes
+        if (Phaser.Input.Keyboard.JustDown(this.restart)) {
             this.music.stop();
             this.scene.start("menuScene", [false]);
         }
-
-        if (Phaser.Input.Keyboard.JustDown(this.Tkey)) {
+        if (Phaser.Input.Keyboard.JustDown(this.loseKey)) {
             this.playLoseAnimation();
         }
-        if (Phaser.Input.Keyboard.JustDown(this.Ykey)) {
-            this.winScreen.alpha = 1;
-            this.endScreenWinTween.play();
-            this.time.delayedCall(this.delay + 10, () => {
-                this.transitionGameOver();
-            }, null, this);
+        if (Phaser.Input.Keyboard.JustDown(this.winKey)) {
+            this.playWinAnimation();
         }
 
-        //TODO: can use farmer's info to see what type of crop he's closest to
-        //allows for pescotti to reward more points for stealing crops close to the farmer
-        let currentState = this.farmerFSM.getState();
-        if (this.savedState != currentState) {
-            console.log(currentState);
-            this.savedState = currentState;
-        }
-
+        //update the UI text values
         this.crops.text = this.stats.crops;
         if(this.oldScore != this.stats.score) {
             if(!this.easedcounter.isPlaying()) {
+                //reassigns tween because tweens seem to define their behavoir at their definition
+                //and don't have methods to reassign values within a tween
                 this.easedcounter = this.tweens.addCounter({
                     from: this.oldScore,
                     to: this.stats.score,
@@ -277,13 +266,11 @@ class Play extends Phaser.Scene {
             this.easedcounter.play();
             this.scoreText.text = "Reputation " + this.easedcounter.getValue().toFixed(0);
         }
-        else {
+        else { //safety code to make sure it updates correctly
             this.scoreText.text = "Reputation " + this.stats.score;
         }
-
-        if (turnipStep == "steal" || turnipStep == "burrow") { //update the UI
-            if (turnipStep == 'burrow'){
-            }
+        //update the UI images and tweens
+        if (turnipStep == "steal" || turnipStep == "burrow") { 
             if (this.stats.crops < 3)
                 this.bag.setFrame(0);
             else if (this.stats.crops >= 3 && this.stats.crops <= 6)
@@ -294,7 +281,7 @@ class Play extends Phaser.Scene {
                 this.crops.setX(1078);
             else
                 this.crops.setX(1085);
-
+            //long bit of code checking score ranges to give the precise runtime rank up tweens 
             if (this.stats.score >= 50 && this.stats.score < 100) {
                 if(this.star.y != 485)
                     this.titleRankUp(485, "Associate");
@@ -322,26 +309,26 @@ class Play extends Phaser.Scene {
         }
 
         //check lose conditions: (farmer and turnip collision or all holes covered)
+        //somewhat hard coded collision logic because the tweens wouldn't work with it for some reason
+        if (!this.locked) {
+            this.physics.world.collide(this.turnip, this.farmer, (turnip) => {
+                turnip.body.setEnable(false);
+                this.loseScreen.alpha = 1;
+                this.transitionGameOver();
+            }, null, this);
+        }
         let loseCondition = true;
         for (let hole of this.holes) {
             if (hole.sprite.covered != true)
                 loseCondition = false;
         }
-        //TODO: replace menuScene transition to gameOverScene transition 
-        //gameOver scene: (display game info: final title achieved, reputation, crops stolen, num of times escaped, 
-        //can also: restart game or back to main menu)
         if (loseCondition) {
             this.playLoseAnimation();
         }
+        //if we've collected all of the crops in the farm, we win!
         let winCondition = (this.stats.score >= 300);
         if (winCondition) {
-            if(!this.endScreenWinTween.isPlaying()){
-            this.winScreen.alpha = 1;
-            this.endScreenWinTween.play();
-            this.time.delayedCall(this.delay + 10, () => {
-                this.transitionGameOver();
-            }, null, this);
-            }
+            this.playWinAnimation();
         }
     }
 
@@ -354,8 +341,21 @@ class Play extends Phaser.Scene {
             }, null, this);
         }
     }
+    playWinAnimation() {
+        this.winScreen.alpha = 1;
+        this.endScreenWinTween.play();
+        this.time.delayedCall(this.delay + 10, () => {
+            this.transitionGameOver();
+        }, null, this);
+    }
     transitionGameOver() {
         this.music.stop();
+        this.audios.running.stop();
+        this.audios.harvest.stop();
+        this.audios.dig.stop();
+        this.audios.sell.stop();
+        this.audios.ocean.stop();
+
         let textureManager = this.textures;
             this.game.renderer.snapshot((image) => {
                 // make sure an existing texture w/ that key doesn't already exist
@@ -369,6 +369,8 @@ class Play extends Phaser.Scene {
     }
 
     titleRankUp(yValue, title) {
+        //creates new tween at each call because tweens define their behavoir at their definition
+        //and don't have methods to reassign values within a tween
         this.tweens.add({
             targets: this.star,
             y: { from: this.star.y, to: yValue },
@@ -390,9 +392,6 @@ class Play extends Phaser.Scene {
         this.audios.sell = this.sound.add('sell', {volume: 0.5});
         this.audios.ocean = this.sound.add('ocean_waves', { loop: true });
     }
-
-
-
 
     //defines all the animations used in play.js
     createAnimations() {

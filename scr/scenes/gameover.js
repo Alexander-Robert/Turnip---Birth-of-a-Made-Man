@@ -2,7 +2,7 @@ class GameOver extends Phaser.Scene {
     constructor() {
         super("gameOverScene");
     }
-    init(data) {
+    init(data) { //get the game stats
         this.stats = data;
         console.log(this.stats);
     }
@@ -32,6 +32,7 @@ class GameOver extends Phaser.Scene {
             fixedWidth: 0
         }
 
+        //create the images (and buttons) for the game over screen
         this.gamePlayImage = this.add.image(0, 0, 'titlesnapshot').setOrigin(0).setDepth(99);
         this.shop = this.add.sprite(0, 736, "shopUI").setOrigin(0).setDepth(this.gamePlayImage.depth + 1);
         this.shop.alpha = 0;
@@ -45,6 +46,7 @@ class GameOver extends Phaser.Scene {
         this.restartClicked = false;
         this.initializeButtons();
 
+        //create the text given the stats
         this.titleText = this.add.text(510, 775,
             `title: ${this.stats.title}`, titleTextConfig).setOrigin(0.5).setDepth(this.shop.depth + 1);
         this.titleText.alpha = 0;
@@ -74,7 +76,7 @@ class GameOver extends Phaser.Scene {
 
     initializeButtons() {
         //define specific button click methods
-        //function requires us to pass the wrapper(i.e. the scene) of the tutorial property
+        //function requires us to pass the wrapper(i.e. the scene) of the accessed properties
         //because Javascript does not pass by reference!
         this.buttonHome.click = function (scene) {
             scene.menuClicked = true;

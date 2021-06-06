@@ -1,10 +1,15 @@
 class Farmer extends Phaser.GameObjects.PathFollower {
+    //look at all these followers! I'm famous. Just kidding, because it's only 1 follower (prefab)
+    //if this prefab was fully designed to allow any number of farmers, it would incorporate checking
+    //locations of other farmers to avoid overlapping, and possibly creating a scalable patrolling behavoir
+    //based on other farmers current routes to avoid flocking and have a much harder game difficultly
     constructor(scene, path, x, y, texture, frame, direction) {
         super(scene, path, x, y, texture, frame);
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
         //way to record the direction the farmer is facing
+        //NOTE: used for graphical updates AND sight detection logic
         this.direction = direction;
     }
 }
@@ -32,6 +37,7 @@ class FarmerState extends State {
             from: 0,            // points allow a path are values 0–1
             to: 1,
             delay: 0,
+            //NOTE: look at updateSpeed to understand the "constant velocity" idea for followers
             duration: 5000,
             // important that the ease is linear to make the farmer move at a constant velocity
             ease: 'Power0',     
@@ -42,58 +48,47 @@ class FarmerState extends State {
         };
     }
 
-    enter(scene, farmer) { //TODO: define any extra parameters needed
-        //TODO: define any commonality that all states use
-        //subclasses will call super.enter(scene, farmer, ...args); to use the common behaviors
-    }
-
-    execute(scene, farmer) { //TODO: define any extra parameters needed
-        //TODO: define any commonality that all states use
-        //subclasses will call super.execute(scene, farmer, ...args); to use the common behaviors
-    }
-
     //checks the path's length to determine how fast the farmer should complete the path
-    //include a factor given by each state to allow for different speeds depending on intended behavoir
+    //include a factor given by calls from each state to allow for different speeds depending on intended behavoir
     //(i.e. chasing turnip is faster, walking around the garden is slower, etc.)
     updateSpeed(farmer, factor) {
-        //console.log("dist     " + farmer.path.getLength());
         //if statements act as piecewise function for determining the speed factor
+        //I tried to to different functions to get more accurate speeds
+        //but linear functions seems to be the most reliable among all states and all distances
         if(farmer.path.getLength() <= 50) { //short path piecewise function
-            //this.pathConfig.duration = ((farmer.path.getLength() / 1.5) * 50);
             this.pathConfig.duration = (farmer.path.getLength() * 5) / factor;
         } 
         else if(farmer.path.getLength() > 50 && farmer.path.getLength() <= 500) { //short path piecewise function
-            //this.pathConfig.duration = (1000000 / (farmer.path.getLength()));
             this.pathConfig.duration = (farmer.path.getLength() * 10) / factor;
         }
         else {
-            //this.pathConfig.duration = ((farmer.path.getLength() / 3) * 50);
             this.pathConfig.duration = (farmer.path.getLength() * 10) / factor;
         }
-        //console.log("duration " + this.pathConfig.duration);
     }
 
     //crude way to determine the direction of the farmer by comparing it's old position to its current
     findDirection(farmer) {
         let newX = farmer.x;
         let newY = farmer.y;
-
+        
+        //uses simple math to get angles to determing direction and the degree of sight 
         let defaultAngle = Math.round(-1 * Math.atan2(newY - this.oldY, newX - this.oldX) * (180 / Math.PI));
         let angle = defaultAngle;
         if (angle < 0)
-            angle += 360;
+        angle += 360;
         if (angle <= 45 || angle > 315)
-            farmer.direction = 'right';
+        farmer.direction = 'right';
         else if (angle <= 135 && angle > 45)
-            farmer.direction = 'up';
+        farmer.direction = 'up';
         else if (angle <= 225 && angle > 135)
-            farmer.direction = 'left';
+        farmer.direction = 'left';
         else if (angle <= 315 && angle > 225)
-            farmer.direction = 'down';
-
+        farmer.direction = 'down';
+        
         this.oldX = newX;
         this.oldY = newY;
-
+        
+        //(see checkAlterts to understand how it's return value calculates degrees of sight)
         return Math.round(defaultAngle);
     }
 
@@ -119,7 +114,6 @@ class FarmerState extends State {
             if(farmer.isFollowing()) {
                 farmer.play(`farmer-${farmer.direction}`);
             }
-            //TODO: set the farmer's image to the corresponding direction
             return true;
         }
         return false;
@@ -155,7 +149,7 @@ class FarmerState extends State {
             farmerAngle = this.findDirection(farmer);
         this.updateDirection(farmer);
         let farmerToTurnipAngle = Math.round(-1 * Math.atan2(turnip.y - farmer.y, turnip.x - farmer.x) * (180 / Math.PI));
-        //calculate the differnce in degrees that the farmer is facing from turnip
+        //calculate the difference in degrees that the farmer is facing from turnip
         let facing = Math.round(Math.abs(Math.abs(farmerAngle) - Math.abs(farmerToTurnipAngle)));
         let distance = Phaser.Math.Distance.Between(farmer.x, farmer.y, turnip.x, turnip.y);
         //if the farmer is facing within 45 degrees of turnip and they are close enough, they see turnip
@@ -164,7 +158,7 @@ class FarmerState extends State {
         }
         
         //otherwise, see if the farmer heard something
-        //noise is passed as an array which is from the turnipFSM using getInfo() //see play.js update()
+        //noise is passed as an array which is from the turnipFSM using getInfo() //see step() within play.js update()
         if(noise[0] != "none") {
             switch(noise[0]){
                 case "running": //if turnip is running within a dist from farmer, then they hear turnip
@@ -203,7 +197,14 @@ class SearchState extends FarmerState {
         this.delay;
     }
 
+    //NOTE: many methods take the stateArgs AND other specific args
+        //basically just look at the state machine code a few times to understand how it works
+        //if you're confused why I passed values a certain way, there's several reasons:
+            //possible issues with state-machine with the step being called so often
+            //wanting to give specific states specific info from and to many other sources 
+                //(i.e. other states, other FSM, or other objects in general)
     enter(scene, farmer, audios, turnip, timeDelay, skipEnter) {
+        //most states stop the farmer following a path to give it behavoir in following another path
         farmer.stopFollow();
         farmer.anims.stop();
         if(skipEnter)
@@ -233,13 +234,11 @@ class SearchState extends FarmerState {
             //(3): have the follower start following the path.
             farmer.startFollow(this.pathConfig);
         }, null, this);
-
-        //play the stop (reset farmer to be a static idle image instead of an animation) 
-        //farmer.anims.play(`walk-${farmer.direction}`);
-        //farmer.anims.stop(); 
     }
 
     execute(scene, farmer, audio, turnip, noise) {
+        //almost every class uses this common behavoir of checkingAlerts
+        //and then executing specific behavoir depending on the alert and the state the farmer is in
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
         if (alert != "none") {
             scene.time.removeAllEvents();
@@ -256,7 +255,8 @@ class SearchState extends FarmerState {
                 }
                 scene.time.clearPendingEvents();
                 scene.time.removeAllEvents();
-                this.stateMachine.transition("search", this.delay);
+                //NOTE: example of passing additional args using the transition method
+                this.stateMachine.transition("search", this.delay); 
                 return;
             }
             else
@@ -264,7 +264,10 @@ class SearchState extends FarmerState {
         }
         if (this.stateMachine.transitioning) return;
         if (!farmer.isFollowing()) {
-            //after walking to the area of noise, look around and then transition to find path
+            //after walking to the area of noise, transition to looking around
+            //NOTE: many transitions follow this logic of checking if following and then checking after a delay
+            //because of a potential issue with the state machine where the execute methods start before
+            //the enter method completes
             scene.time.delayedCall(this.delay + 250, () => {
             if (!farmer.isFollowing()) {
                 this.stateMachine.transition("lookAround");
@@ -276,12 +279,14 @@ class SearchState extends FarmerState {
 
 //look around then go back to find path state
 class LookState extends FarmerState {
-    constructor(scene, farmer) { 
+    constructor(scene, farmer, stats) { 
         super(scene, farmer);
         this.looking = true;
+        this.stats = stats;
     }
 
     enter(scene, farmer, audios, turnip) {
+        this.stats.escaped++;
         farmer.stopFollow();
         this.looking = true;
         let turnOrder = [];
@@ -339,13 +344,9 @@ class LookState extends FarmerState {
                 return;
             }
             else if (alert == "hears turnip") {
-                //each time farmer hears something while searching, follow the noise quicker
-                if (this.delay >= 500) {
-                    this.delay /= 2; 
-                }
                 scene.time.clearPendingEvents();
                 scene.time.removeAllEvents();
-                this.stateMachine.transition("search", this.delay);
+                this.stateMachine.transition("search");
                 return;
             }
             else
@@ -358,11 +359,11 @@ class LookState extends FarmerState {
 }
 
 //follow direct path between farmer and turnip
-//if turnip goes out of view, stop at the last place seen and search
+//if turnip goes out of view, stop at the last place seen and look around
 class ChaseState extends FarmerState {
-    constructor(scene, farmer, stats) { 
+    constructor(scene, farmer) {
         super(scene, farmer);
-        this.stats = stats;
+        
     }
 
     enter(scene, farmer, audios, turnip, timeDelay) {
@@ -383,28 +384,24 @@ class ChaseState extends FarmerState {
             farmer.setPath(this.path);
             //this.path.draw(this.graphics);
             //TODO: check for obstacles in the way and create a path around them
+            //NOTE: ran out of time to be able to complete obstacle dection pathfinding
             this.updateSpeed(farmer, 1.7);
-            //console.log(this.pathConfig.duration);
             farmer.startFollow(this.pathConfig);
         }, null, this);
     }
     execute(scene, farmer, audio, turnip, noise) {
-        //outside of alert checking because 
-        //if we're in the chase state and turnip burrows, we should bury the hole.
+        //outside of alert checking because otherwise farmer can't see turnip burrowing
+        //AKA if we're in the chase state and turnip burrows, the farmer should bury the hole.
         if (noise[0] == "burrowing") {
             scene.time.removeAllEvents();
+            //noise[1] is obj: location: x,y; (hole tile pos) and the shop UI sprite for the hole
+            //could have used a better name but everything else uses the turnip info as noises
             this.stateMachine.transition("bury", noise[1]); 
-            //noise[1] is obj: location: x,y; (hole tile pos) and the shop UI sprite for the hole 
             return;
         }
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
         if (alert != "none") {
             if (alert == "sees turnip") {
-                // //if the farmer needs to follow a new path towards turnip,
-                // //update the current path
-                // if(farmer.path.getEndPoint().x != turnip.x
-                // || farmer.path.getEndPoint().y != turnip.y) {
-                //     this.path.moveTo(turnip.x, turnip.y);
                 //     this.path.draw(this.graphics);
                 if (!farmer.isFollowing()) {
                     //if the farmer sees turnip and finished following to his last location
@@ -412,6 +409,9 @@ class ChaseState extends FarmerState {
                     scene.time.delayedCall(100, () => {
                         if (!farmer.isFollowing()) {
                             scene.time.removeAllEvents();
+                            //I wanted to implement a better chasing feeling than this
+                            //but I couldn't figure out how given the constraints of paths and followers
+                            //although this is sufficient in the game since bunnies are fast and hard to catch
                             this.stateMachine.transition("chase", 1);
                             return;
                         }
@@ -434,26 +434,20 @@ class ChaseState extends FarmerState {
             }
         }
         if (!farmer.isFollowing()) {
-            //after a little bit of not finding anything, go back to the normal walking routes
+            //after a little bit of not finding anything, look around
             scene.time.delayedCall(500, () => {
                 if (!farmer.isFollowing()) {
                     scene.time.removeAllEvents();
                     //reuse the looking around part of search
-                    this.stats.escaped++;
                     this.stateMachine.transition("lookAround"); 
                     return;
                 }
             }, null, this);
         }
-
-        // handle animation
-        //farmer.anims.play(`walk-${farmer.direction}`, true);
-    }
-    exit(scene, farmer, audios) {
     }
 }
 
-//go to hole tile and bury it.
+//go to the hole tile and bury it. Then find the closest path to walk along
 class BuryState extends FarmerState {
     constructor(scene, farmer, field) { 
         super(scene, farmer);
@@ -465,32 +459,21 @@ class BuryState extends FarmerState {
     enter(scene, farmer, audios, path, tileInfo) {
         farmer.stopFollow();
         farmer.anims.stop();
-        //console.log(tileInfo);
         this.tileInfo = tileInfo;
         let locationX = this.field.tileToWorldX(this.tileInfo.location.x);
         let locationY = this.field.tileToWorldY(this.tileInfo.location.y);
-        //TODO: create an angry emoji above farmer's head
         this.path = scene.add.path(farmer.x, farmer.y)
         this.path.lineTo(locationX, locationY);
         farmer.setPath(this.path);
         //this.path.draw(this.graphics);
-        //TODO: check for obstacles in the way and create a path around them
         this.updateSpeed(farmer, 1);
-        //console.log(this.pathConfig.duration);
         farmer.startFollow(this.pathConfig);
     }
 
     execute(scene, farmer, audio, turnip, noise) {
-        //on path complete
-        //replace hole tile with buried hole tile
-        //somehow remove the hole tile from usable holes
-        //transition to search state
         if (!farmer.isFollowing()) {
-            //after a little bit of not finding anything, go back to the normal walking routes
             scene.time.delayedCall(100, () => {
                 if (!farmer.isFollowing()) {
-                    //TODO: play burying animation
-                    //TODO: on animation complete
                     this.field.putTileAt(9, this.tileInfo.location.x, this.tileInfo.location.y, false);
                     this.tileInfo.sprite.setTexture('covered hole');
                     this.tileInfo.sprite.covered = true;
@@ -503,6 +486,7 @@ class BuryState extends FarmerState {
     }
 }
 
+//another "abstract" class that allows the findpath and walk states to store the walking path routes
 class pathState extends FarmerState {
     constructor(scene, farmer, map) {
         super(scene, farmer);
@@ -561,7 +545,7 @@ class findPathState extends pathState {
         this.closestPath = null;
     }
     enter(scene, farmer, audios, turnip) {
-        let minDist = 100000000;
+        let minDist = 100000000; //some big number so we guarentee we don't skip checking any paths distances 
         for(let path of this.paths) {
             let pathStart = path.getStartPoint();
             let distance = Phaser.Math.Distance.Between(farmer.x, farmer.y, pathStart.x, pathStart.y);
@@ -574,7 +558,6 @@ class findPathState extends pathState {
         tempPath.lineTo(this.closestPath.getStartPoint().x, this.closestPath.getStartPoint().y);
         farmer.setPath(tempPath);
         this.updateSpeed(farmer, 1.1);
-        //console.log(this.pathConfig.duration);
         farmer.startFollow(this.pathConfig);
     }
     execute(scene, farmer, audios, turnip, noise) {
@@ -617,11 +600,7 @@ class WalkState extends pathState {
     }
 
     enter(scene, farmer, audios, turnip, pathName, wateredPlant) {
-        //if(wateredPlant) //if we just watered a plant
-        //continue following the given path
-        //else
-        //choose random path (excluding the given path)
-        //follow path
+        //make sure we're given a valid path
         if (!(pathName === undefined)) {
             //create an array of the possible paths for the farmer to follow given it's starting point
             let possiblePaths = [];
@@ -666,15 +645,7 @@ class WalkState extends pathState {
         farmer.startFollow(this.pathConfig);
     }
 
-    execute(scene, farmer, audios, turnip, noise) {
-        //if(super.checkAlerts()) //if the farmer has been altered in some manner
-        //transition to search state
-        //if farmer is on top of a crop
-        //calculate 25% chance
-        //if success, transition to water state (pass it the current path)
-        //on path complete
-        //transition to walk state again (passing the current path) (AKA: finds a new path)
-        
+    execute(scene, farmer, audios, turnip, noise) {        
         let alert = super.checkAlerts(scene, farmer, turnip, noise);
         if (alert != "none") {
             scene.time.removeAllEvents();
@@ -694,6 +665,8 @@ class WalkState extends pathState {
             scene.time.delayedCall(100, () => {
                 if (!farmer.isFollowing()) {
                     scene.time.removeAllEvents();
+                    //repeat finding and walking along the given path routes
+                    //passing it farmer.path.name avoids going along the same path they just took
                     this.stateMachine.transition("walk", farmer.path.name);
                     return;
                 }
