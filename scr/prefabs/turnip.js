@@ -264,7 +264,7 @@ class BurrowState extends TurnipState {
         this.pescotti = pescotti;
     }
 
-    enter(scene, turnip, audios, field, tile) {
+    enter(scene, turnip, audios, field, stats, tile) {
         turnip.body.setVelocity(0);
         this.stateMachine.setInfo("burrowing");
 
