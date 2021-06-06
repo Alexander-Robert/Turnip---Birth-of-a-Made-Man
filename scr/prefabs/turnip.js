@@ -266,6 +266,7 @@ class BurrowState extends TurnipState {
 
     enter(scene, turnip, audios, field, stats, tile) {
         turnip.body.setVelocity(0);
+        turnip.body.setEnable(false);
         this.stateMachine.setInfo("burrowing");
 
         audios.dig.play();
@@ -380,7 +381,7 @@ class BurrowState extends TurnipState {
         audios.ocean.pause();
         
         turnip.alpha = 1;
-
+        turnip.body.setEnable(true);
     }
 
     findHole(tile) {

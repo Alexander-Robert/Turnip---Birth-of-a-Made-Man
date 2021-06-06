@@ -39,7 +39,8 @@ class Play extends Phaser.Scene {
         this.keys.Spacekey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.keys.restart = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
-        this.Hkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
+        this.Tkey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+        this.Ykey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
 
         //create audios object of different audios
         this.createAudio();
@@ -72,6 +73,9 @@ class Play extends Phaser.Scene {
         this.terrainLayer.setCollision([7, 8]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
+        //this.physics.add.collider(this.turnip, this.farmer, () => {this.playLoseAnimation();}, null, this);
+
+        this.locked = false;
 
         //define stats
         this.stats = {
@@ -222,20 +226,29 @@ class Play extends Phaser.Scene {
         let turnipStep = this.turnipFSM.step(); //step returns the return value of execute methods
         let farmerStep = this.farmerFSM.step(this.turnipFSM.getInfo());
 
-       //this.physics.world.collide(this.turnip, this.farmer, this.playLoseAnimation(), null, this);
+        if(!this.locked) {
+            this.physics.world.collide(this.turnip, this.farmer, (turnip) => {
+                console.log("collision");
+                turnip.body.setEnable(false);
+                this.loseScreen.alpha = 1;
+                this.transitionGameOver();
+            }, null, this);
+        }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
             this.music.stop();
             this.scene.start("menuScene", [false]);
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.Hkey)) {
+        if (Phaser.Input.Keyboard.JustDown(this.Tkey)) {
             this.playLoseAnimation();
-            // this.winScreen.alpha = 1;
-            // this.endScreenWinTween.play();
-            // this.time.delayedCall(this.delay, () => {
-            //     this.transitionGameOver();
-            // }, null, this);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.Ykey)) {
+            this.winScreen.alpha = 1;
+            this.endScreenWinTween.play();
+            this.time.delayedCall(this.delay + 10, () => {
+                this.transitionGameOver();
+            }, null, this);
         }
 
         //TODO: can use farmer's info to see what type of crop he's closest to
@@ -325,7 +338,7 @@ class Play extends Phaser.Scene {
             if(!this.endScreenWinTween.isPlaying()){
             this.winScreen.alpha = 1;
             this.endScreenWinTween.play();
-            this.time.delayedCall(this.delay, () => {
+            this.time.delayedCall(this.delay + 10, () => {
                 this.transitionGameOver();
             }, null, this);
             }
@@ -333,9 +346,10 @@ class Play extends Phaser.Scene {
     }
 
     playLoseAnimation() {
-        if(!this.endScreenLoseTween.isPlaying()) {
+        if(!this.endScreenLoseTween.isPlaying() && !this.locked) {
+            this.locked = true;
             this.endScreenLoseTween.play();
-            this.time.delayedCall(this.delay, () => {
+            this.time.delayedCall(this.delay + 10, () => {
                 this.transitionGameOver();
             }, null, this);
         }
