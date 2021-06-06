@@ -205,10 +205,10 @@ class Play extends Phaser.Scene {
         //define the Finite State Machine (FSM) behaviors for the farmer AI
         this.farmerFSM = new StateMachine('walk', {
             search: new SearchState(this, this.farmer),
+            lookAround: new LookState(this, this.farmer),
             chase: new ChaseState(this, this.farmer, this.stats),
             findPath: new findPathState(this, this.farmer, field),
             walk: new WalkState(this, this.farmer, field),
-            water: new WaterState(this, this.farmer),
             bury: new BuryState(this, this.farmer, field),
         }, [this, this.farmer, this.audios, this.turnip]);
 

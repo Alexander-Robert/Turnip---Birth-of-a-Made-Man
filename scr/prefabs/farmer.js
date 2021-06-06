@@ -201,16 +201,14 @@ class SearchState extends FarmerState {
         //create empty bindings to be used later in any of the class methods
         this.path;
         this.delay;
-        this.lookingAround = false;
     }
 
     enter(scene, farmer, audios, turnip, timeDelay, skipEnter) {
         farmer.stopFollow();
         farmer.anims.stop();
-        this.lookingAround = false;
         if(skipEnter)
             return;
-
+        
         let locationX = turnip.x;
         let locationY = turnip.y;
         //TODO: fiona put question sound here
@@ -220,7 +218,7 @@ class SearchState extends FarmerState {
             question.destroy();
         });
         //check if we have a specific delay before farmer goes to location of the noise
-        this.delay = (timeDelay !== undefined) ? timeDelay : 2000;
+        this.delay = (timeDelay !== undefined) ? timeDelay : 1750;
         scene.time.delayedCall(this.delay, () => {
             //general path following set up in 3 steps:
             //(1): create the path
@@ -246,6 +244,8 @@ class SearchState extends FarmerState {
         if (alert != "none") {
             scene.time.removeAllEvents();
             if (alert == "sees turnip"){
+                scene.time.clearPendingEvents();
+                scene.time.removeAllEvents();
                 this.stateMachine.transition("chase");
                 return;
             }
@@ -254,17 +254,37 @@ class SearchState extends FarmerState {
                 if (this.delay >= 500) {
                     this.delay /= 2; 
                 }
+                scene.time.clearPendingEvents();
+                scene.time.removeAllEvents();
                 this.stateMachine.transition("search", this.delay);
                 return;
             }
             else
                 console.warn(`alert ${alert} unknown`);
         }
+        if (this.stateMachine.transitioning) return;
         if (!farmer.isFollowing()) {
             //after walking to the area of noise, look around and then transition to find path
-            if(!this.lookingAround) {
-               this.lookingAround = true;
-            let turnOrder = [];
+            scene.time.delayedCall(this.delay + 250, () => {
+            if (!farmer.isFollowing()) {
+                this.stateMachine.transition("lookAround");
+           }
+        }, null, this);
+        }
+    }
+}
+
+//look around then go back to find path state
+class LookState extends FarmerState {
+    constructor(scene, farmer) { 
+        super(scene, farmer);
+        this.looking = true;
+    }
+
+    enter(scene, farmer, audios, turnip) {
+        farmer.stopFollow();
+        this.looking = true;
+        let turnOrder = [];
             switch (farmer.direction) {
                 case "up":
                     turnOrder = ["down", "left", "right"];
@@ -302,13 +322,37 @@ class SearchState extends FarmerState {
             }, null, this);
             scene.time.delayedCall(4000, () => {
                 if (!farmer.isFollowing()) {
-                    this.lookingAround = false;
-                    scene.time.removeAllEvents();
-                    this.stateMachine.transition("findPath");
+                    this.looking = false;
                     return;
                 }
             }, null, this);
-           }
+    }
+
+    execute(scene, farmer, audio, turnip, noise) {
+        let alert = super.checkAlerts(scene, farmer, turnip, noise);
+        if (alert != "none") {
+            scene.time.removeAllEvents();
+            if (alert == "sees turnip"){
+                scene.time.clearPendingEvents();
+                scene.time.removeAllEvents();
+                this.stateMachine.transition("chase");
+                return;
+            }
+            else if (alert == "hears turnip") {
+                //each time farmer hears something while searching, follow the noise quicker
+                if (this.delay >= 500) {
+                    this.delay /= 2; 
+                }
+                scene.time.clearPendingEvents();
+                scene.time.removeAllEvents();
+                this.stateMachine.transition("search", this.delay);
+                return;
+            }
+            else
+                console.warn(`alert ${alert} unknown`);
+        }
+        if(!this.looking) {
+            this.stateMachine.transition("findPath");
         }
     }
 }
@@ -396,7 +440,7 @@ class ChaseState extends FarmerState {
                     scene.time.removeAllEvents();
                     //reuse the looking around part of search
                     this.stats.escaped++;
-                    this.stateMachine.transition("search", undefined, true); 
+                    this.stateMachine.transition("lookAround"); 
                     return;
                 }
             }, null, this);
@@ -456,23 +500,6 @@ class BuryState extends FarmerState {
                 }
             }, null, this);
         }
-    }
-}
-
-//select a random plant to water
-//TODO: see if you can fit this logic in walk state instead of creating its own state
-//TODO: see if the farmer should be altered in this state or not 
-//(could be a mechanic to allow the player move close by the farmer while they're busy watering)
-class WaterState extends FarmerState {
-    constructor(scene, farmer) { super(scene, farmer); }
-
-    enter(scene, farmer, audios) {
-        //play a watering animation
-    }
-
-    execute(scene, farmer, audio, turnip, noise) {
-        //on animation complete
-        //transition back to walk state (given the current path)
     }
 }
 
