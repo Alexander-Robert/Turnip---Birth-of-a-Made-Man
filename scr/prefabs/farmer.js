@@ -213,6 +213,7 @@ class SearchState extends FarmerState {
         let locationX = turnip.x;
         let locationY = turnip.y;
         //TODO: fiona put question sound here
+        audios.questionSFX.play();
         let question = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'question');
         question.anims.play('question anim');
         question.on('animationcomplete', () => {
@@ -371,7 +372,7 @@ class ChaseState extends FarmerState {
         farmer.anims.stop();
         let locationX = turnip.x;
         let locationY = turnip.y;
-        //TODO: fiona put exclamation sound here
+
         let warning = scene.add.sprite(farmer.x, farmer.y - (farmer.displayHeight / 1.5), 'warning', 0);
         warning.anims.play('warning anim');
         warning.on('animationcomplete', () => {
@@ -565,12 +566,12 @@ class findPathState extends pathState {
         if (alert != "none") {
             scene.time.removeAllEvents();
             if (alert == "sees turnip"){
-                audios.surprisedSFX.play();
+                
                 this.stateMachine.transition("chase");
                 return;
             }
             else if (alert == "hears turnip"){
-                audios.questionSFX.play();
+                
                 this.stateMachine.transition("search");
                 return;
             }

@@ -8,7 +8,8 @@ class Play extends Phaser.Scene {
     }
     
     create() {        
-        this.music = this.sound.add('music', { volume: 0.2 }, { loop: true });
+        this.music = this.sound.add('music', {volume: 0.4});
+        this.music.loop = true;
         this.music.play();
 
         this.rankup = this.sound.add('rankup');
@@ -66,7 +67,7 @@ class Play extends Phaser.Scene {
 
         //set collisions for turnip and specific tilemap layers
         this.backgroundLayer.setCollision([4, 5]);
-        this.terrainLayer.setCollision([7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 , 26, 27 ,28 ,29, 30]);
+        this.terrainLayer.setCollision([7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 , 26, 27 ,28 ,29, 30, 35, 36 ,37, 38]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
