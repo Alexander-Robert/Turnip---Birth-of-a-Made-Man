@@ -325,7 +325,7 @@ class Play extends Phaser.Scene {
         }
         //if we've collected all of the crops in the farm, we win!
         let winCondition = (this.stats.score >= 300);
-        if (winCondition) {
+        if (winCondition && !this.locked) {
             this.playWinAnimation();
         }
     }
@@ -341,6 +341,7 @@ class Play extends Phaser.Scene {
     }
     playWinAnimation() {
         this.winScreen.alpha = 1;
+        this.locked = true;
         this.endScreenWinTween.play();
         this.time.delayedCall(this.delay + 10, () => {
             this.transitionGameOver();
