@@ -3,6 +3,19 @@ class Load extends Phaser.Scene {
         super("loadScene");
     }
     preload() {
+        // loading bar
+        // see: https://rexrainbow.github.io/phaser3-rex-notes/docs/site/loader/
+        let loadingBar = this.add.graphics();
+        this.load.on('progress', (value) => {
+            loadingBar.clear();                                 // reset fill/line style
+            loadingBar.fillStyle(0xFFFFFF, 1);                  // (color, alpha)
+            // (x, y, w, h)
+            loadingBar.fillRect(0, 0, (game.config.width * value), game.config.height);  
+        });
+        this.load.on('complete', () => {
+            loadingBar.destroy();
+        });
+
         this.load.path = "./assets/";
         //turnip assets //NOTE: space is idle image, _ is atlas
         this.load.image("turnip up",    "/turnip/turnip back.png");
@@ -44,19 +57,18 @@ class Load extends Phaser.Scene {
         this.load.image("pescotti sale", "/pescotti/pescotti_sale.png");
         this.load.atlas('poof', '/pescotti/poof.png', '/pescotti/poof.json', 
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        this.load.atlas('bagbear', '/pescotti/bagbear.png', '/pescotti/bagbear.json', 
-                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        
         //other UI assets
         this.load.image("hole", "hole.png");
         this.load.image("covered hole", "covered hole.png");
-        this.load.image("bag", "bag.png");
         this.load.image("shopUI", "shopUI.png");
-        this.load.image("field_set", "tileset.png");
         this.load.image("star", "star.png");
         this.load.atlas('light house', 'lightup.png', 'lightup.json', 
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('bagbear', '/pescotti/bagbear.png', '/pescotti/bagbear.json', 
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
-        //scene images
+        //scene images (includes button images)
         this.load.image("win-screen", "/menus/win_screen.png");
         this.load.image("lose-screen", "/menus/lose_screen.png");
         this.load.atlas('info-screen', '/tutorial/tutorial.png', '/tutorial/tutorial.json',
@@ -65,6 +77,12 @@ class Load extends Phaser.Scene {
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('arrow button', '/tutorial/arrowButton.png', '/tutorial/arrowButton.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('home', '/menus/home.png', '/menus/home.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        this.load.atlas('restart', '/menus/restart.png', '/menus/restart.json',
+                        Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        
+        //individual components of intro scene images
         this.load.image("a-game-by", "/menus/a_game_by.png");
         this.load.image("alex-robert", "/menus/alex_robert.png");
         this.load.image("birth-of-a-made-man", "/menus/birth_of_a_made_man.png");
@@ -75,6 +93,7 @@ class Load extends Phaser.Scene {
         this.load.image("thea-gamez", "/menus/thea_gamez.png");
         this.load.image("turnip-throne", "/menus/turnip_throne.png");
         this.load.image("turnip-title", "/menus/turnip_title.png");
+        this.load.image("credits text", "/menus/credits_full_text.png");
         this.load.atlas('credits', '/menus/credits.png', '/menus/credits.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('instructions', '/menus/instructions.png', '/menus/instructions.json',
@@ -94,6 +113,7 @@ class Load extends Phaser.Scene {
         this.load.audio("music", "melodie.wav");
 
         //tilemap assets
+        this.load.image("field_set", "tileset.png");
         this.load.spritesheet("object_set", "objects.png", {
             frameWidth: 32,
             frameHeight: 32
@@ -101,6 +121,7 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("field_test", "field_new.json");
     }
     create() {
+        //starting menuScene with true indicates to play the intro tween
         this.scene.start("menuScene", [true]);
     }
 }

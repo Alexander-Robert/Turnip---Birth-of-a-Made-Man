@@ -7,7 +7,7 @@ class Turnip extends Phaser.Physics.Arcade.Sprite {
         //create individual properties for Turnip
         this.direction = direction;
         this.velocity = 200;
-        //this.body.setCollideWorldBounds(true);
+        //this.body.setCollideWorldBounds(true); //doesn't need worldbounds as tilemap acts as that
     }
 }
 //inherits from State; Acts as an abstract class to define properties and methods common among all subclasses
@@ -21,16 +21,6 @@ class TurnipState extends State {
         this.S = scene.keys.Skey;
         this.D = scene.keys.Dkey;
         this.SPACE = scene.keys.Spacekey;
-    }
-
-    enter(scene, turnip) { //TODO: define any extra parameters needed
-        //TODO: define any commonality that all states use
-        //subclasses will call super.enter(scene, turnip, ...args); to use the common behaviors
-    }
-
-    execute(scene, turnip) { //TODO: define any extra parameters needed
-        //TODO: define any commonality that all states use
-        //subclasses will call super.execute(scene, turnip, ...args); to use the common behaviors
     }
 
     //returns the tile and tile name that turnip is currently on.
@@ -96,13 +86,11 @@ class TurnipState extends State {
         switch (tile.index) {
             case -1:
                 return { tile: tile, name: "none" };
-            case 6:
+            case 6: //index values somewhat hardcoded as they are tilemap dependant
                 return { tile: tile, name: "crop" };
             case 8:
                 return { tile: tile, name: "hole" };
             default:
-                // console.warn("found some other tile not listed");
-                // console.log(tile);
                 return { tile: tile, name: "other" };
         }
     }
@@ -115,20 +103,22 @@ class IdleState extends TurnipState {
     enter(scene, turnip) {
         turnip.body.setVelocity(0); //stop turnip
         this.stateMachine.setInfo("none");
-        //play the stop (reset turnip to be a static idle image instead of an animation)
+        //reset turnip to be a static idle image instead of an animation
         turnip.anims.stop();
         turnip.setTexture('turnip down');
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
+        if (this.stateMachine.transitioning) return;
         //check for transitions
         //if the interact key is pressed
-        if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
-                this.stateMachine.transition('steal', tileInfo);
-                return;
+                if (stats.crops != stats.maxCrops) {
+                    this.stateMachine.transition('steal', tileInfo);
+                    return;
+                }
             }
 
             if (tileInfo.name == "hole") {
@@ -139,7 +129,8 @@ class IdleState extends TurnipState {
             }
         }
 
-        if (this.W.isDown || this.A.isDown || this.S.isDown || this.D.isDown) { //if any of the move keys were pressed
+        //if any of the move keys were pressed
+        if (this.W.isDown || this.A.isDown || this.S.isDown || this.D.isDown) { 
             this.stateMachine.transition('move');
             return;
         }
@@ -152,19 +143,20 @@ class MoveState extends TurnipState {
     enter(scene, turnip, audios) {
         audios.running.play();
     }
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
+        if (this.stateMachine.transitioning) return;
         //check for transitions
         //if the interact key is pressed 
-        if (this.stateMachine.transitioning) return;
         if (Phaser.Input.Keyboard.JustDown(this.SPACE)) {
             let tileInfo = super.checkTileType(scene, turnip, field);
             if (tileInfo.name == "crop") {
-                this.stateMachine.transition('steal', tileInfo);
-                return;
+                if (stats.crops != stats.maxCrops){
+                    this.stateMachine.transition('steal', tileInfo);
+                    return;
+                }
             }
 
             if (tileInfo.name == "hole") {
-                //TODO: see if we need to give burrow additional info
                 this.stateMachine.transition('burrow', tileInfo.tile);
                 return;
 
@@ -212,69 +204,49 @@ class MoveState extends TurnipState {
 }
 
 class StealState extends TurnipState {
-    constructor(scene, stats, maxCrops) {
+    constructor(scene) {
         super(scene);
-        this.stats = stats;
         this.tileInfo;
-        this.maxCrops = maxCrops;
     }
 
-    enter(scene, turnip, audios, field, tileInfo) {
-        if (this.stats.crops == this.maxCrops)
-            return;
+    enter(scene, turnip, audios, field, stats, tileInfo) {
         this.tileInfo = tileInfo;
-        //play stealing animation
         audios.harvest.play();
         this.stateMachine.setInfo("stealing");
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         if (this.stateMachine.transitioning) return;
-        if (this.stats.crops == this.maxCrops) {
-            this.stateMachine.transition("idle");
-            return "steal";
-        }
-        //on animation complete
-        this.stats.crops++;
-        this.stats.totalCrops++;
-        //TODO: have it spawn a crop falling into the UI bag display
+        stats.crops++;
+        stats.totalCrops++;
         field.removeTileAt(this.tileInfo.tile.x, this.tileInfo.tile.y, false);
         this.stateMachine.transition("idle");
         return "steal";
     }
 }
 
+//I learned later on by the professor that the implementation for BurrowState fights the purpose
+//of state machines by having it handle multiple objects (turnip and turnipUI)
+//which is partially coded this way because it would have been an easier implementation 
+//than using the same sprite had prior mechanics not been removed
 class BurrowState extends TurnipState {
-    constructor(scene, stats, holes, pescotti) {
+    constructor(scene, holes, pescotti) {
         super(scene);
+        //uses different sprite to handle within the UI
         this.turnipUI = scene.physics.add.sprite(800, 810, 'turnip-enter', 0).setSize(0.6);
-        // let fixImage = (turnipUI) => {
-        //     console.log("fixImage called");
-        //     turnipUI.setScale(1);
-        //     turnipUI.setTexture('turnip down');
-        // };
-        // this.enterTween = scene.tweens.add({
-        //     targets: this.turnipUI,
-        //     scale: { from: 1, to: 2},
-        //     ease: 'Linear',
-        //     duration: 3000,
-        //     paused: true,
-        //     onComplete: fixImage(this.turnipUI),
-        //     onCompleteScope: scene,
-        // });
         this.turnipUI.velocity = 250;
         this.turnipUI.alpha = 0;
-        this.stats = stats;
         this.holes = holes;
         this.pescotti = pescotti;
     }
 
-    enter(scene, turnip, audios, field, tile) {
+    enter(scene, turnip, audios, field, stats, tile) {
         turnip.body.setVelocity(0);
+        turnip.body.setEnable(false);
         this.stateMachine.setInfo("burrowing");
 
         audios.dig.play();
-        var OceanisPaused = audios.ocean.isPaused;
+        let OceanisPaused = audios.ocean.isPaused;
         if (OceanisPaused == true) {
             audios.ocean.resume();
         }
@@ -302,9 +274,11 @@ class BurrowState extends TurnipState {
         });
     }
 
-    execute(scene, turnip, audios, field) {
+    execute(scene, turnip, audios, field, stats) {
         if (this.stateMachine.transitioning) return;
         this.stateMachine.setInfo("none");
+        //issue with transitions and execute method call times from state machine
+        //requires this fix to stop turnip from moving everywhere
         if ((turnip.body.velocity.x != 0) || (turnip.body.velocity.y != 0))
             turnip.body.setVelocity(0);
         //check for transitions
@@ -336,17 +310,14 @@ class BurrowState extends TurnipState {
                     }
                 }
             }
-            if ((this.turnipUI.body.position.x < 360)){
-                if (this.stats.crops > 0) {
-                    this.stats.score += this.stats.crops * 5;
-                    this.stats.crops = 0;
+            //otherwise check if turnip is close enough to the counter to sell his crops
+            if ((this.turnipUI.body.position.x < 350)){
+                if (stats.crops > 0) {
+                    stats.score += stats.crops * 5;
+                    stats.crops = 0;
                     audios.sell.play();
                 }
             }
-            //check type of tile turnip is on.
-            //If the type is an interactible tile, 
-            //transition to the corresponding state
-
             return "burrow";
         }
 
@@ -376,16 +347,11 @@ class BurrowState extends TurnipState {
     }
 
     exit(scene, turnip, audios) {
-        //play exit shop animation
-        //on animation complete
-        //delete the separate sprite in the shop UI that player controls
-        //play an exit burrow animation
-        //make turnip visible again
         audios.dig.play();
         audios.ocean.pause();
         
         turnip.alpha = 1;
-
+        turnip.body.setEnable(true);
     }
 
     findHole(tile) {

@@ -10,6 +10,23 @@
 </head>
 
 <body>
+    <!-- https://stackoverflow.com/questions/51217147/how-to-use-a-local-font-in-phaser-3 -->
+    <style media='screen' type='text/css'>
+        @font-face {
+            font-family: font1;
+            src: url('assets/Lobster-Regular.ttf');
+        }
+    </style>
+    <div style="font-family:font1; position:absolute; left:-1000px; visibility:hidden;">.</div>
+    <!-- https://www.fontspace.com/cowboy-junior-font-f48534 -->
+    <style media='screen' type='text/css'>
+        @font-face {
+            font-family: font2;
+            src: url('assets/CowboyJunior.ttf');
+        }
+    </style>
+    <div style="font-family:font2; position:absolute; left:-1000px; visibility:hidden;">.</div>
+
     <script src="lib/phaser.js"></script>
     <script src="lib/state-machine.js"></script>
     <script src="scr/prefabs/farmer.js"></script>
