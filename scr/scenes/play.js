@@ -4,8 +4,8 @@ class Play extends Phaser.Scene {
     }
     create() {
         console.log("created playScene!");
-
-        this.music = this.sound.add('music', {volume: 0.2});
+        
+        this.music = this.sound.add('music', {volume: 0.4});
         this.music.loop = true;
         this.music.play();
 

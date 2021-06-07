@@ -4,7 +4,7 @@ Alexander Robert
 Thea Gamez
 Fiona Hsu
 Game title: Turnip - Birth of a Made Man
-Date completed:
+Date completed: 6/7/2021
 */
 
 //define main game object

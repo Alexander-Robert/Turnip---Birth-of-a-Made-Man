@@ -91,7 +91,7 @@ class Load extends Phaser.Scene {
         this.load.audio("question_sfx", "hm_sfx.ogg");
         this.load.audio("surprised_sfx", "surprised_sfx.wav");
         this.load.audio("ocean_waves", "ocean_waves.wav");
-        this.load.audio("music", "melodie.mp3");
+        this.load.audio("music", "melodie.wav");
 
         //tilemap assets
         this.load.spritesheet("object_set", "objects.png", {
