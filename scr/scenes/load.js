@@ -9,7 +9,8 @@ class Load extends Phaser.Scene {
         this.load.on('progress', (value) => {
             loadingBar.clear();                                 // reset fill/line style
             loadingBar.fillStyle(0xFFFFFF, 1);                  // (color, alpha)
-            loadingBar.fillRect((game.config.width / 4), game.config.height / 2, (game.config.width / 2) * value, 5);  // (x, y, w, h)
+            // (x, y, w, h)
+            loadingBar.fillRect(0, 0, (game.config.width * value), game.config.height);  
         });
         this.load.on('complete', () => {
             loadingBar.destroy();
