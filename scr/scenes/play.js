@@ -209,12 +209,11 @@ class Play extends Phaser.Scene {
             if (this.stats.score >= 50 && this.stats.score < 100) {
                 if(this.star.y != 485)
                     this.titleRankUp(485, "Associate");
-                    this.rankup.play();
             }
             else if (this.stats.score >= 100 && this.stats.score < 150) {
                 if(this.star.y != 440)
                     this.titleRankUp(440, "Soldier");
-                    this.rankup.play();
+
             }
             else if (this.stats.score >= 150 && this.stats.score < 200) {
                 if(this.star.y != 395)
@@ -257,6 +256,7 @@ class Play extends Phaser.Scene {
             duration: 1500,
         });
         this.starTweenGrow.play();
+        this.rankup.play();
         this.lightHouse.play('light up');
         this.stats.title = title;
     }
@@ -270,8 +270,8 @@ class Play extends Phaser.Scene {
         this.audios.sell = this.sound.add('sell', {volume: 0.5});
         this.audios.ocean = this.sound.add('ocean_waves', { loop: true });
         
-        this.audios.questionSFX = this.sound.add('question_sfx');
-        this.audios.surprisedSFX = this.sound.add('surprised_sfx', {volume: 0.5});
+        this.audios.questionSFX = this.sound.add('question_sfx', {volume: 0.7});
+        this.audios.surprisedSFX = this.sound.add('surprised_sfx', {volume: 0.3});
     }
 
 
