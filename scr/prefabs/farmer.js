@@ -553,6 +553,7 @@ class findPathState extends pathState {
         if (alert != "none") {
             scene.time.removeAllEvents();
             if (alert == "sees turnip"){
+                //audios.surprisedSFX.play();
                 this.stateMachine.transition("chase");
                 return;
             }

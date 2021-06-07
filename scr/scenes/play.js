@@ -5,8 +5,11 @@ class Play extends Phaser.Scene {
     create() {
         console.log("created playScene!");
 
-        this.music = this.sound.add('music', {volume: 0.2}, { loop: true }, );
+        this.music = this.sound.add('music', {volume: 0.2});
+        this.music.loop = true;
         this.music.play();
+
+        this.rankup = this.sound.add('rankup');
 
         //define key inputs
         //NOTE: keys must be defined before turnipFSM 
@@ -48,7 +51,7 @@ class Play extends Phaser.Scene {
 
         //set collisions
         this.backgroundLayer.setCollision([4, 5]);
-        this.terrainLayer.setCollision([7, 8]);
+        this.terrainLayer.setCollision([7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 , 26, 27 ,28 ,29, 30]);
         this.physics.add.collider(this.turnip, this.backgroundLayer);
         this.physics.add.collider(this.turnip, this.terrainLayer);
 
@@ -206,10 +209,12 @@ class Play extends Phaser.Scene {
             if (this.stats.score >= 50 && this.stats.score < 100) {
                 if(this.star.y != 485)
                     this.titleRankUp(485, "Associate");
+                    this.rankup.play();
             }
             else if (this.stats.score >= 100 && this.stats.score < 150) {
                 if(this.star.y != 440)
                     this.titleRankUp(440, "Soldier");
+                    this.rankup.play();
             }
             else if (this.stats.score >= 150 && this.stats.score < 200) {
                 if(this.star.y != 395)
@@ -264,6 +269,9 @@ class Play extends Phaser.Scene {
         this.audios.dig = this.sound.add('dig', {volume: 0.4});
         this.audios.sell = this.sound.add('sell', {volume: 0.5});
         this.audios.ocean = this.sound.add('ocean_waves', { loop: true });
+        
+        this.audios.questionSFX = this.sound.add('question_sfx');
+        this.audios.surprisedSFX = this.sound.add('surprised_sfx', {volume: 0.5});
     }
 
 
