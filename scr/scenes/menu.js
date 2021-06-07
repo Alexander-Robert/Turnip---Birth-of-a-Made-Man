@@ -6,6 +6,7 @@ class Menu extends Phaser.Scene {
         this.playtweens = playtweens[0];
     }
     create(){
+
         //background menu images
         this.white               = this.add.image(0, 0, "white").setOrigin(0);
         this.pink                = this.add.image(0, 0, "pink").setOrigin(0);
