@@ -17,6 +17,8 @@ class Menu extends Phaser.Scene {
         this.alex_robert         = this.add.image(775, 130, "alex-robert").setOrigin(0);
         this.birth_of_a_made_man = this.add.image(420, 70, "birth-of-a-made-man").setOrigin(0);
         this.fiona_hsu           = this.add.image(1080, 130, "fiona-hsu").setOrigin(0);
+        this.creditsText         = this.add.image(860, 225, "credits text").setOrigin(0);
+        this.creditsText.alpha = 0; //want this hidden reguardless of intro tween
         this.thea_gamez          = this.add.image(1330, 130, "thea-gamez").setOrigin(0);
         this.turnip_throne       = this.add.image(180, 290, "turnip-throne").setOrigin(0);
         this.turnip_title        = this.add.image(64, 125, "turnip-title").setOrigin(0);
@@ -31,6 +33,22 @@ class Menu extends Phaser.Scene {
         this.buttonRightArrow = this.add.sprite(160, 32, 'arrow button', 0).setOrigin(0).setDepth(100);
         this.buttons.push(this.buttonStart, this.buttonCredits, this.buttonInstructions,
             this.buttonExit, this.buttonLeftArrow, this.buttonRightArrow);
+
+        //create intro independant tweens
+        this.creditsTextFadeInTween = this.tweens.add({
+            targets: this.creditsText,
+            alpha: { from: 0, to: 1 },
+            ease: 'Sine.easeInOut',
+            duration: 500,
+            paused: true,
+        });
+        this.creditsTextFadeOutTween = this.tweens.add({
+            targets: this.creditsText,
+            alpha: { from: 1, to: 0 },
+            ease: 'Sine.easeInOut',
+            duration: 500,
+            paused: true,
+        });
 
         if (this.playtweens) { //if we're entering the menu scene and want to play the intro
             this.buttonStart.x = game.config.width;
@@ -153,7 +171,7 @@ class Menu extends Phaser.Scene {
             scene.start = true; 
         };
         this.buttonCredits.click = function (scene) {
-            //scene.credits.alpha = (scene.credits.alpha) ? 0 : 1; 
+            (scene.creditsText.alpha) ? scene.creditsTextFadeOutTween.play() : scene.creditsTextFadeInTween.play();
         };
         this.buttonInstructions.click = function (scene) {
             scene.tutorial = true;

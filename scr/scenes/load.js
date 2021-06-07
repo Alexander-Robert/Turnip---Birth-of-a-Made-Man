@@ -93,6 +93,7 @@ class Load extends Phaser.Scene {
         this.load.image("thea-gamez", "/menus/thea_gamez.png");
         this.load.image("turnip-throne", "/menus/turnip_throne.png");
         this.load.image("turnip-title", "/menus/turnip_title.png");
+        this.load.image("credits text", "/menus/credits_full_text.png");
         this.load.atlas('credits', '/menus/credits.png', '/menus/credits.json',
                         Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
         this.load.atlas('instructions', '/menus/instructions.png', '/menus/instructions.json',
